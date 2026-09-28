@@ -136,6 +136,22 @@ public final class PunishmentManager {
         return dao.history(victim, limit);
     }
 
+    public CompletableFuture<PunishmentDao.HistoryCount> countHistory(UUID victim) {
+        return dao.countHistory(victim, System.currentTimeMillis());
+    }
+
+    /**
+     * Deletes what can be deleted of a player's history. Punishments in force are kept, so no
+     * cached mute or ban on any proxy can be left pointing at a row that no longer exists.
+     */
+    public CompletableFuture<PunishmentDao.ClearResult> clearHistory(UUID victim) {
+        return dao.clearHistory(victim, System.currentTimeMillis());
+    }
+
+    public CompletableFuture<PunishmentDao.RemoveResult> removeHistoryEntry(UUID victim, long id) {
+        return dao.removeHistoryEntry(victim, id, System.currentTimeMillis());
+    }
+
     /** Loads a player's mute into memory. Called during login, where a query is already due. */
     public CompletableFuture<Void> loadMute(UUID victim) {
         return dao.findActive(PunishmentType.MUTE, victim, System.currentTimeMillis())

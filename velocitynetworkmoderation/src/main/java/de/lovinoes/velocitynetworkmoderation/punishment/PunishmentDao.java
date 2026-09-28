@@ -16,8 +16,9 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Stores punishments and the addresses players were last seen on.
  *
- * Nothing is ever deleted. Lifting a punishment clears its active flag and records who did it,
- * so a history stays a history.
+ * Lifting a punishment never deletes it: it clears the active flag and records who did it, so a
+ * history stays a history. Rows are only deleted on purpose, through /history clear and remove,
+ * and never while they are still in force.
  */
 public final class PunishmentDao {
 
@@ -241,6 +242,115 @@ public final class PunishmentDao {
                     }
                 }
                 return punishments;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /** How many entries a clear would remove, and how many a player has in total. */
+    public record HistoryCount(int clearable, int total) {
+    }
+
+    /** What a clear did: entries removed, and entries kept because they are still in force. */
+    public record ClearResult(int removed, int kept) {
+    }
+
+    public enum RemoveResult { REMOVED, NOT_FOUND, IN_FORCE }
+
+    /**
+     * SQL for "still in force": a ban, IP ban or mute that has not been lifted and has not run
+     * out. The same rule as {@link Punishment#isCurrentlyInForce} limited to revocable types,
+     * since a kick or a warning is over the moment it happens. Such rows are never deleted:
+     * deleting an active ban's row would silently unban the player.
+     *
+     * Takes three parameters, filled by {@link #bindInForce}.
+     */
+    private static final String IN_FORCE = "(type IN (" + revocableTypes() + ") AND active = ?"
+            + " AND (expires_at = ? OR expires_at > ?))";
+
+    private static String revocableTypes() {
+        StringBuilder types = new StringBuilder();
+        for (PunishmentType type : PunishmentType.values()) {
+            if (type.isRevocable()) {
+                if (!types.isEmpty()) {
+                    types.append(", ");
+                }
+                types.append('\'').append(type.name()).append('\'');
+            }
+        }
+        return types.toString();
+    }
+
+    private static int bindInForce(PreparedStatement statement, int index, long now) throws SQLException {
+        statement.setBoolean(index, true);
+        statement.setLong(index + 1, Punishment.PERMANENT);
+        statement.setLong(index + 2, now);
+        return index + 3;
+    }
+
+    public CompletableFuture<HistoryCount> countHistory(UUID victim, long now) {
+        return databaseManager.execute(connection -> {
+            String sql = "SELECT COUNT(*) AS total, COALESCE(SUM(CASE WHEN " + IN_FORCE + " THEN 0 ELSE 1 END), 0)"
+                    + " AS clearable FROM " + punishmentsTable + " WHERE victim_uuid = ?";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                int next = bindInForce(statement, 1, now);
+                statement.setString(next, victim.toString());
+                try (ResultSet results = statement.executeQuery()) {
+                    results.next();
+                    return new HistoryCount(results.getInt("clearable"), results.getInt("total"));
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /** Deletes every entry of a player's history that is not still in force. */
+    public CompletableFuture<ClearResult> clearHistory(UUID victim, long now) {
+        return databaseManager.execute(connection -> {
+            String delete = "DELETE FROM " + punishmentsTable + " WHERE victim_uuid = ? AND NOT " + IN_FORCE;
+            String remaining = "SELECT COUNT(*) FROM " + punishmentsTable + " WHERE victim_uuid = ?";
+            try (PreparedStatement deleteStatement = connection.prepareStatement(delete);
+                 PreparedStatement countStatement = connection.prepareStatement(remaining)) {
+                deleteStatement.setString(1, victim.toString());
+                bindInForce(deleteStatement, 2, now);
+                int removed = deleteStatement.executeUpdate();
+
+                countStatement.setString(1, victim.toString());
+                try (ResultSet results = countStatement.executeQuery()) {
+                    results.next();
+                    return new ClearResult(removed, results.getInt(1));
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    /** Deletes one entry of a player's history, unless it is still in force. */
+    public CompletableFuture<RemoveResult> removeHistoryEntry(UUID victim, long id, long now) {
+        return databaseManager.execute(connection -> {
+            String delete = "DELETE FROM " + punishmentsTable + " WHERE id = ? AND victim_uuid = ? AND NOT " + IN_FORCE;
+            String exists = "SELECT COUNT(*) FROM " + punishmentsTable + " WHERE id = ? AND victim_uuid = ?";
+            try (PreparedStatement deleteStatement = connection.prepareStatement(delete)) {
+                deleteStatement.setLong(1, id);
+                deleteStatement.setString(2, victim.toString());
+                bindInForce(deleteStatement, 3, now);
+                if (deleteStatement.executeUpdate() > 0) {
+                    return RemoveResult.REMOVED;
+                }
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            // Nothing deleted: either there is no such entry for this player, or it is in force.
+            try (PreparedStatement existsStatement = connection.prepareStatement(exists)) {
+                existsStatement.setLong(1, id);
+                existsStatement.setString(2, victim.toString());
+                try (ResultSet results = existsStatement.executeQuery()) {
+                    results.next();
+                    return results.getInt(1) > 0 ? RemoveResult.IN_FORCE : RemoveResult.NOT_FOUND;
+                }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

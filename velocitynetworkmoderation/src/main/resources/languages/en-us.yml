@@ -68,6 +68,23 @@ commands:
     # Below the list when older entries exist. <limit> is history-limit from config.yml.
     more: "<dark_gray> Only the latest <limit> entries are shown.</dark_gray>"
 
+    # For players with permissions.history-clear. <clear>, <confirm> and <remove> are the words
+    # set in config.yml.
+    usage-edit: "<gray>» /history <player> [<clear> | <remove> <id>]</gray>"
+    # Before a clear. <count> entries would be deleted, <kept> are in force and stay. <button>
+    # is clear-button, which runs the confirmation when clicked.
+    clear-confirm: '<gray>* Delete <white><count></white> entries of "<player>" for good? <button></gray>'
+    clear-button: "<red>[Confirm]</red>"
+    cleared: '<green>* Deleted <count> entries of "<player>".</green>'
+    cleared-kept: "<gray>  <kept> still in force and kept. Lift them first to delete them.</gray>"
+    nothing-to-clear: '<gray>* "<player>" has nothing that can be deleted.</gray>'
+    removed: '<green>* Deleted #<id> of "<player>".</green>'
+    in-force: "<dark_red>* #<id> is still in force. Lift it first.</dark_red>"
+    no-such-entry: '<dark_red>* "<player>" has no entry #<id>.</dark_red>'
+    # Sent to the console as the record of who deleted what. "" logs nothing.
+    cleared-log: '<dark_gray>* [Security] "<operator>" deleted <count> history entries of "<player>".</dark_gray>'
+    removed-log: '<dark_gray>* [Security] "<operator>" deleted history entry #<id> of "<player>".</dark_gray>'
+
 # Words reused across messages.
 words:
   permanent: "permanent"

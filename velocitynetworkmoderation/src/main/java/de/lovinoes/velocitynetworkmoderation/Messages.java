@@ -139,10 +139,19 @@ public final class Messages {
                 .replace("<duration>", DurationParser.describe(punishment.remainingMillis(now)));
     }
 
+    /**
+     * Lifted only when someone lifted it. A punishment that ran out is also marked inactive, by
+     * the clean-up in PunishmentDao, but it has no lift date, and it expired rather than was lifted.
+     */
     private String statusWord(Punishment punishment, long now) {
-        String key = !punishment.active()
-                ? "words.revoked"
-                : punishment.isExpired(now) ? "words.expired" : "words.active";
+        String key;
+        if (punishment.revokedAt() > 0) {
+            key = "words.revoked";
+        } else if (!punishment.active() || punishment.isExpired(now)) {
+            key = "words.expired";
+        } else {
+            key = "words.active";
+        }
         return language.getString(key, key);
     }
 

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.OptionalLong;
 import java.util.concurrent.TimeUnit;
@@ -221,7 +222,34 @@ public final class VelocityNetworkModerationPlugin {
                 .build();
         commandManager.register(historyMeta, new HistoryCommand(proxyServer, punishmentManager, messages,
                 config.getString("permissions.history", "velocitynetworkmoderation.history"),
-                seeVanished, Math.max(1, config.getInt("history-limit", 25))));
+                config.getString("permissions.history-clear", "velocitynetworkmoderation.history.clear"),
+                seeVanished, Math.max(1, config.getInt("history-limit", 25)), historyWords(config)));
+    }
+
+    /**
+     * The words after /history &lt;player&gt;. Each has to be one word, and clear and remove must
+     * differ, or the command could not tell them apart; anything else falls back with a warning.
+     */
+    private HistoryCommand.Words historyWords(YamlConfig config) {
+        String clear = historyWord(config, "clear", "clear");
+        String confirm = historyWord(config, "confirm", "confirm");
+        String remove = historyWord(config, "remove", "remove");
+        if (clear.equals(remove)) {
+            logger.warn("commands.history.clear and commands.history.remove are both '{}'. Using clear and remove.",
+                    clear);
+            clear = "clear";
+            remove = "remove";
+        }
+        return new HistoryCommand.Words(clear, confirm, remove);
+    }
+
+    private String historyWord(YamlConfig config, String key, String fallback) {
+        String word = config.getString("commands.history." + key, fallback).strip().toLowerCase(Locale.ROOT);
+        if (word.isEmpty() || word.contains(" ")) {
+            logger.warn("commands.history.{} is '{}', which is not a single word. Using {}.", key, word, fallback);
+            return fallback;
+        }
+        return word;
     }
 
     private void register(CommandManager commandManager, YamlConfig config, Messages messages, PunishmentType type,

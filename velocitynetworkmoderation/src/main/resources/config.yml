@@ -53,6 +53,10 @@ permissions:
   unmute: "velocitynetworkmoderation.unmute"
   history: "velocitynetworkmoderation.history"
 
+  # Lets a player delete entries with /history <player> clear and /history <player> remove <id>.
+  # A ban or mute still in force is never deleted; lift it first. "" gives nobody this.
+  history-clear: "velocitynetworkmoderation.history.clear"
+
   # Nobody holding this can be punished. It is checked against the player while they are online,
   # which is the only time the proxy knows their permissions, so it cannot protect someone who
   # is offline. Give it to staff you never want caught by a misclick.
@@ -163,3 +167,8 @@ commands:
   history:
     name: "history"
     aliases: ["punishments", "checkpunishments"]
+    # The words after the player's name: /history <player> clear [confirm] and remove <id>.
+    # One word each.
+    clear: "clear"
+    confirm: "confirm"
+    remove: "remove"

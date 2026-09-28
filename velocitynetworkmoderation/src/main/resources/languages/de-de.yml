@@ -68,6 +68,23 @@ commands:
     # Unter der Liste, wenn es ältere Einträge gibt. <limit> ist history-limit aus der config.yml.
     more: "<dark_gray> Nur die letzten <limit> Einträge werden angezeigt.</dark_gray>"
 
+    # Für Spieler mit permissions.history-clear. <clear>, <confirm> und <remove> sind die Wörter
+    # aus der config.yml.
+    usage-edit: "<gray>» /history <player> [<clear> | <remove> <id>]</gray>"
+    # Vor dem Löschen. <count> Einträge würden gelöscht, <kept> gelten noch und bleiben.
+    # <button> ist clear-button, das beim Anklicken die Bestätigung ausführt.
+    clear-confirm: '<gray>* <white><count></white> Einträge von "<player>" endgültig löschen? <button></gray>'
+    clear-button: "<red>[Bestätigen]</red>"
+    cleared: '<green>* <count> Einträge von "<player>" gelöscht.</green>'
+    cleared-kept: "<gray>  <kept> gelten noch und bleiben. Erst aufheben, dann löschen.</gray>"
+    nothing-to-clear: '<gray>* "<player>" hat nichts, was gelöscht werden kann.</gray>'
+    removed: '<green>* #<id> von "<player>" gelöscht.</green>'
+    in-force: "<dark_red>* #<id> gilt noch. Erst aufheben.</dark_red>"
+    no-such-entry: '<dark_red>* "<player>" hat keinen Eintrag #<id>.</dark_red>'
+    # Geht an die Konsole, als Protokoll, wer was gelöscht hat. "" protokolliert nichts.
+    cleared-log: '<dark_gray>* [Sicherheit] "<operator>" hat <count> Einträge im Verlauf von "<player>" gelöscht.</dark_gray>'
+    removed-log: '<dark_gray>* [Sicherheit] "<operator>" hat Eintrag #<id> im Verlauf von "<player>" gelöscht.</dark_gray>'
+
 # Wörter, die in mehreren Nachrichten vorkommen.
 words:
   permanent: "permanent"

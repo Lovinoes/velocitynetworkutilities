@@ -37,8 +37,12 @@ Start a message with `!` to send it to global chat or `#` for staff chat. `/chat
 | `/unbanip <player\|ip> [-s]` | `/unipban` | `velocitynetworkmoderation.unbanip` | Unban an IP |
 | `/unmute <player> [-s]` | | `velocitynetworkmoderation.unmute` | Unmute a player |
 | `/history <player>` | `/punishments`, `/checkpunishments` | `velocitynetworkmoderation.history` | Show a player's punishments |
+| `/history <player> clear` | | `velocitynetworkmoderation.history.clear` | Delete a player's history, after confirming |
+| `/history <player> remove <id>` | | `velocitynetworkmoderation.history.clear` | Delete one entry |
 
 Durations look like `30m`, `7d` or `1d12h`. Without one, a ban or mute is permanent. `-s` keeps the punishment silent: only players with `velocitynetworkmoderation.seesilent` are told.
+
+Bans and mutes that are still in force are never deleted from a history. Lift them first with `/unban` or `/unmute`.
 
 ## Player info
 
