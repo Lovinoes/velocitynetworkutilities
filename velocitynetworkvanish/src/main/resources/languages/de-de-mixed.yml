@@ -1,0 +1,29 @@
+# Nachrichten für VelocityNetworkVanish, deutsch mit den englischen Begriffen, die auf einem
+# Minecraft-Server ohnehin jeder benutzt: Server, vanished.
+#
+# Diese Datei wird mit "language: de-de-mixed" in der config.yml ausgewählt und ist die
+# Voreinstellung. Wer alles auf Deutsch will, nimmt de-de.
+
+messages:
+  vanish-enabled: "<green>* Du bist jetzt <gradient:green:dark_green>vanished</gradient>.</green>"
+  vanish-disabled: "<dark_gray>* Du bist nicht mehr <gradient:red:dark_red>vanished</gradient>.</dark_gray>"
+
+  # /silentvanish (auch /svanish, /sv) schaltet um, ohne etwas anzukündigen.
+  silent-vanish-enabled: "<green>* Du bist jetzt <gradient:green:dark_green>vanished</gradient>. <dark_gray>(lautlos)</dark_gray></green>"
+  silent-vanish-disabled: "<dark_gray>* Du bist nicht mehr <gradient:red:dark_red>vanished</gradient>. (lautlos)</dark_gray>"
+
+  # /vanish kündigt einen vorgetäuschten Leave an, das Aufheben einen vorgetäuschten Join, sodass
+  # es für alle anderen wie ein normales Trennen und Wiederverbinden aussieht. Wer see-vanished
+  # hat, bekommt das nie zu sehen.
+  #
+  # Diese Zeilen müssen exakt wie broadcast.join und broadcast.leave in der Sprachdatei von
+  # VelocityNetworkPlayerInfo für DIESELBE Sprache lauten, sonst sieht ein vorgetäuschter Leave
+  # anders aus als ein echter und verrät den Vanish. <player> ist der einzige Platzhalter,
+  # "" kündigt für diese Richtung nichts an.
+  fake-join: '<dark_gray>* "<player>" has joined the game.</dark_gray>'
+  fake-leave: '<dark_gray>* "<player>" has left the game.</dark_gray>'
+
+  # Statt einen vanishten Spieler an einen geschützten Command wie /tpa zu verraten, als wäre er
+  # gar nicht online. <target> ist der getippte Name.
+  target-not-found: '<dark_red>* Es wurde kein Spieler mit dem Namen "<target>" gefunden.</dark_red>'
+  players-only: "<dark_red>* Nur Spieler können diesen Befehl benutzen.</dark_red>"

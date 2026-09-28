@@ -1,0 +1,5 @@
+# gradlew runs on Linux in CI and must keep LF line endings whatever the committer's settings;
+# gradlew.bat runs on Windows and needs CRLF.
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf

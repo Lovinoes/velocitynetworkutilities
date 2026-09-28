@@ -1,0 +1,360 @@
+# The word list for the chat filter. Whether the filter runs, who it skips, which commands it
+# reads and what happens after repeated offences are in config.yml under "filter".
+#
+# HOW AN ENTRY MATCHES
+#
+#   Every entry ignores case and accents, and sees through the usual disguises: letters swapped
+#   for look-alikes (4 or @ for a, 3 for e, 1 or ! for i, 0 for o, 5 or $ for s, 7 or + for t,
+#   and Cyrillic letters that look Latin), stretched letters (fuuuuck), punctuation or colour
+#   codes inside the word (f.u.c.k, &cfuck), invisible characters, and letters typed apart
+#   (f u c k). You never need to list those variants yourself.
+#
+#   word      the whole word only. "ass" does not fire on "class" or "passage", which is what
+#             keeps this from censoring half of normal chat.
+#   word*     the word and anything after it: "wank*" also catches "wanker" and "wanking".
+#   *word     anything before it, then the word.
+#   *word*    anywhere at all, even inside another word. Only for stems with no innocent use.
+#   two words a phrase. It also catches the words written together: "kill your self" catches
+#             "kill yourself" and "killyourself".
+#   regex:... a Java regular expression, run against the lower-cased message with punctuation
+#             turned into spaces, and without any of the help above. Only if you need it.
+#
+# WHAT HAPPENS
+#
+#   Each category has:
+#     enabled  false   the category is ignored entirely, words and all
+#     action   censor  the word is replaced by the censor-character from config.yml and the
+#                      rest of the message is sent
+#              block   the message is not sent at all, and the player is told
+#     counts   true    counts towards the automatic punishments in config.yml
+#              false   is censored or blocked, and that is all
+#
+#   A message hitting several categories is blocked if any of them blocks, and counts once if
+#   any of them counts. Staff with the notify permission from config.yml are told either way.
+#
+#   Put your own words in "custom", or in any category below. A category you invent yourself
+#   is removed when the plugin updates this file, so use these ones.
+#
+# THIS LIST
+#
+#   Written for a Minecraft server with English and German players, along the lines of what
+#   most servers run: slurs, sexual content, telling people to hurt themselves and Nazi slogans
+#   are stopped; insults and hard swearing are starred out; the everyday swearing people use in
+#   ordinary conversation ("shit", "damn", "scheiße", "Kacke") is left alone. That last group is
+#   listed under "mild" and switched off; set its enabled to true if you want it starred too.
+#
+#   Words that are harmless in the other language are deliberately missing: "dick" is German
+#   for thick, "Mist" is harmless, "Schwanz" is a tail, "negro" is Spanish for black.
+#
+#   The big public list most servers start from is LDNOOBW ("List of Dirty, Naughty, Obscene,
+#   and Otherwise Bad Words", github.com/LDNOOBW), licensed CC BY 4.0. Its entries can be pasted
+#   into "custom" as they are if you want more, but expect some ordinary words to be caught.
+#
+#   Until you change a list, a plugin update may improve it. Once you change it, it is yours
+#   and is never touched again.
+
+categories:
+  # Everyday swearing. Off by default, so ordinary conversation is never touched.
+  mild:
+    enabled: false
+    action: censor
+    counts: false
+    words:
+      - "*shit*"
+      - "crap"
+      - "crappy"
+      - "damn*"
+      - "goddamn*"
+      - "piss"
+      - "pissed"
+      - "arse"
+      - "bollocks"
+      - "bugger"
+      - "wtf"
+      - "omfg"
+      - "scheiß*"
+      - "scheiss*"
+      - "kacke"
+      - "verdammt*"
+
+  # Hard swearing that is not aimed at anyone. Starred out, and never punished on its own.
+  profanity:
+    enabled: true
+    action: censor
+    counts: false
+    words:
+      - "*fuck*"
+      - "*fvck*"
+      - "*fcuk*"
+      - "*phuck*"
+      - "fucc*"
+      - "fck"
+      - "fcking"
+      - "fckin"
+      - "fuk"
+      - "fuking"
+      - "fukin"
+      - "fuker"
+      - "fuq"
+      - "phuk"
+      - "phuking"
+      - "stfu"
+      - "gtfo"
+      - "mofo"
+      - "fick"
+      - "fickt"
+      - "ficken"
+      - "fickend"
+      - "fickst"
+      - "gefickt*"
+      - "verfick*"
+      - "*ficker*"
+      - "fick dich"
+
+  # Words aimed at someone.
+  insults:
+    enabled: true
+    action: censor
+    counts: true
+    words:
+      - "*bitch*"
+      - "biatch"
+      - "bastard*"
+      - "*asshole*"
+      - "arsehole*"
+      - "asswipe*"
+      - "dumbass*"
+      - "jackass*"
+      - "dickhead*"
+      - "dickface*"
+      - "*cunt*"
+      - "twat*"
+      - "wank*"
+      - "tosser*"
+      - "douchebag*"
+      - "scumbag*"
+      - "whore*"
+      - "slut*"
+      - "thot"
+      - "thots"
+      - "retard*"
+      - "tard"
+      - "cuck"
+      - "cucks"
+      - "cucked"
+      - "nonce"
+      - "nonces"
+      - "pedo"
+      - "pedos"
+      - "paedo"
+      - "*arschloch*"
+      - "arschgeige*"
+      - "arschkriecher*"
+      - "*hurensohn*"
+      - "hure"
+      - "huren*"
+      - "wichs*"
+      - "*wichser*"
+      - "wixer*"
+      - "missgeburt*"
+      - "spast"
+      - "spasti*"
+      - "spasten"
+      - "spastic*"
+      - "schlampe*"
+      - "*fotze*"
+      - "nutte"
+      - "nutten"
+      - "flittchen"
+      - "drecksau*"
+      - "drecksack*"
+      - "kackbratze*"
+      - "*schwanzlutscher*"
+
+  # Slurs against a group of people. Blocked outright.
+  slurs:
+    enabled: true
+    action: block
+    counts: true
+    words:
+      - "*nigger*"
+      - "*nigga*"
+      - "niglet*"
+      - "neger*"
+      - "coon"
+      - "coons"
+      - "darkie*"
+      - "jigaboo*"
+      - "porch monkey"
+      - "*faggot*"
+      - "fagg*"
+      - "fag"
+      - "fags"
+      - "dyke"
+      - "dykes"
+      - "lesbo"
+      - "tranny"
+      - "trannies"
+      - "shemale*"
+      - "chink"
+      - "chinks"
+      - "ching chong"
+      - "gook"
+      - "gooks"
+      - "zipperhead*"
+      - "spic"
+      - "spics"
+      - "wetback*"
+      - "beaner*"
+      - "kike"
+      - "kikes"
+      - "yid"
+      - "yids"
+      - "jewboy*"
+      - "paki"
+      - "pakis"
+      - "raghead*"
+      - "towelhead*"
+      - "sand nigger"
+      - "camel jockey"
+      - "gyppo*"
+      - "pikey*"
+      - "dago"
+      - "dagos"
+      - "schwuchtel*"
+      - "tunte"
+      - "tunten"
+      - "transe"
+      - "transen"
+      - "kanake*"
+      - "kanacke*"
+      - "polacke*"
+      - "kameltreiber*"
+      - "schlitzauge*"
+      - "*judensau*"
+
+  # Sexual content.
+  sexual:
+    enabled: true
+    action: censor
+    counts: true
+    words:
+      - "*porn*"
+      - "*blowjob*"
+      - "handjob*"
+      - "rimjob*"
+      - "titjob*"
+      - "*dildo*"
+      - "cum"
+      - "cumming"
+      - "cumshot*"
+      - "cumslut*"
+      - "jizz*"
+      - "creampie*"
+      - "bukkake*"
+      - "gangbang*"
+      - "deepthroat*"
+      - "masturbat*"
+      - "jerk off"
+      - "jerking off"
+      - "fap"
+      - "fapping"
+      - "orgasm*"
+      - "horny"
+      - "anal"
+      - "pussy"
+      - "pussies"
+      - "cock"
+      - "cocks"
+      - "*cocksucker*"
+      - "clit"
+      - "clits"
+      - "clitoris"
+      - "tits"
+      - "titties"
+      - "titten"
+      - "boobs"
+      - "boobies"
+      - "milf"
+      - "milfs"
+      - "hentai"
+      - "lolicon"
+      - "nudes"
+      - "rape"
+      - "raped"
+      - "raping"
+      - "rapist*"
+      - "vergewaltig*"
+
+  # Telling someone to hurt themselves. Blocked outright.
+  self-harm:
+    enabled: true
+    action: block
+    counts: true
+    words:
+      - "kys"
+      - "kill your self"
+      - "kill ur self"
+      - "kill yo self"
+      - "hang your self"
+      - "neck your self"
+      - "unalive your self"
+      - "slit your wrist*"
+      - "drink bleach"
+      - "bring dich um"
+      - "häng dich auf"
+      - "haeng dich auf"
+      - "erhäng dich"
+      - "erhaeng dich"
+      - "töte dich"
+      - "toete dich"
+      - "geh sterben"
+
+  # Nazi slogans and codes. Blocked outright.
+  extremism:
+    enabled: true
+    action: block
+    counts: true
+    words:
+      - "heil hitler"
+      - "sieg heil"
+      - "1488"
+      - "white power"
+      - "gas the jews"
+      - "kill all jews"
+      - "hitler did nothing wrong"
+      - "blood and soil"
+      - "blut und boden"
+      - "juden raus"
+      - "ausländer raus"
+      - "auslaender raus"
+      - "deutschland den deutschen"
+
+  # Your own words. Nothing is in here, so an update never has anything to change.
+  custom:
+    enabled: true
+    action: censor
+    counts: true
+    words: []
+
+# Real words that a wildcard entry above would otherwise catch. Compared as the whole word, so
+# "scunthorpe" allows exactly that word and nothing else.
+allowed:
+  - "scunthorpe"
+  - "shiitake"
+  - "shitake"
+  - "niggard"
+  - "niggardly"
+  - "snigger"
+  - "sniggers"
+  - "sniggered"
+  - "sniggering"
+  - "fickle"
+  - "fickleness"
+  - "retardant"
+  - "retardants"
+  - "retardation"
+  - "wankel"
+  - "damnation"
+  - "hurenkind"
+  - "spastik"

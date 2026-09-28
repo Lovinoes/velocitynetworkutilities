@@ -1,0 +1,147 @@
+# Messages for VelocityNetworkModeration, in English.
+#
+# Pick this file with "language: en-us" in config.yml.
+#
+# Placeholders available everywhere below:
+#   <id>         the punishment's number, for referring to it later
+#   <type>       ban, ip_ban, mute, kick or warn
+#   <player>     who was punished
+#   <address>    the address, for an IP ban
+#   <operator>   who issued it
+#   <reason>     the reason given
+#   <created>    when it was issued
+#   <expires>    when it runs out, or the permanent word
+#   <duration>   how long is left, or the permanent word
+#   <revoked_by> who lifted it
+#   <status>     active, expired or revoked
+
+commands:
+  ban:
+    usage: "<gray>» /ban <player> [duration] [reason] [-s]</gray>"
+    success: '<green>* "<player>" was banned <dark_gray>(#<id>, <expires>)</dark_gray></green>'
+  banip:
+    usage: "<gray>» /banip <player> [duration] [reason] [-s]</gray>"
+    success: '<green>* The IP of "<player>" was banned <dark_gray>(#<id>, <expires>)</dark_gray></green>'
+  mute:
+    usage: "<gray>» /mute <player> [duration] [reason] [-s]</gray>"
+    success: '<green>* "<player>" was muted <dark_gray>(#<id>, <expires>)</dark_gray></green>'
+  kick:
+    usage: "<gray>» /kick <player> [reason] [-s]</gray>"
+    success: '<green>* "<player>" was kicked <dark_gray>(#<id>)</dark_gray></green>'
+  warn:
+    usage: "<gray>» /warn <player> [reason] [-s]</gray>"
+    success: '<green>* "<player>" was warned <dark_gray>(#<id>)</dark_gray></green>'
+  unban:
+    usage: "<gray>» /unban <player> [-s]</gray>"
+    success: '<green>* "<player>" was unbanned <dark_gray>(#<id>)</dark_gray></green>'
+  unbanip:
+    usage: "<gray>» /unbanip <player|ip> [-s]</gray>"
+    success: '<green>* The IP of "<player>" was unbanned <dark_gray>(#<id>)</dark_gray></green>'
+  unmute:
+    usage: "<gray>» /unmute <player> [-s]</gray>"
+    success: '<green>* "<player>" was unmuted <dark_gray>(#<id>)</dark_gray></green>'
+  history:
+    usage: "<gray>» /history <player></gray>"
+    header: "<gray><player> <dark_gray>|</dark_gray> <count> entry/entries</gray>"
+    empty: "<gray>  No entries for <player>.</gray>"
+    entry: "  <dark_gray>#<id></dark_gray> <white><type></white> <dark_gray>|</dark_gray> <gray><reason></gray> <dark_gray>|</dark_gray> <gray><operator>, <created></gray> <dark_gray>|</dark_gray> <status>"
+
+# Words reused across messages.
+words:
+  permanent: "permanent"
+
+  # <duration_phrase> uses these, so a broadcast reads "banned for 7d" but "banned permanently"
+  # rather than "banned for permanent". <duration> is the only placeholder in the second one.
+  permanent-phrase: "permanently"
+  duration-phrase: "for <duration>"
+
+  console: "Console"
+
+  # Shown to the moderator after a silent punishment, so they can tell it was silent.
+  silent-notice: "<dark_gray>  (silent, only staff were told)</dark_gray>"
+  default-reason: "No reason given"
+  active: "<red>active</red>"
+  expired: "<gray>expired</gray>"
+  revoked: "<green>revoked</green>"
+
+# What a punished player sees. Each is a list of lines sent as one block, so these work as a
+# full disconnect screen for bans and kicks.
+screens:
+  ban:
+    - "<dark_red>You have been banned from the server.</dark_red>"
+    - ""
+    - "<gray>Reason:</gray> <white><reason></white>"
+    - "<gray>Expires:</gray> <white><expires></white>"
+    - "<gray>By:</gray> <white><operator></white>"
+    - ""
+    - "<dark_gray>#<id></dark_gray>"
+
+  ip-ban:
+    - "<dark_red>Your IP has been banned from the network.</dark_red>"
+    - ""
+    - "<gray>Reason:</gray> <white><reason></white>"
+    - "<gray>Expires:</gray> <white><expires></white>"
+    - "<gray>By:</gray> <white><operator></white>"
+    - ""
+    - "<dark_gray>#<id></dark_gray>"
+
+  kick:
+    - "<dark_red>You have been kicked from the network.</dark_red>"
+    - ""
+    - "<gray>Reason:</gray> <white><reason></white>"
+    - "<gray>By:</gray> <white><operator></white>"
+
+  # Sent in chat each time a muted player tries to talk, so keep it to a line or two.
+  mute:
+    - "<dark_red>* You are muted and cannot write.</dark_red>"
+    - "<dark_red>Reason: <red><reason></red> <dark_gray>|</dark_gray> <red><duration></red> left</dark_red>"
+
+  unmute:
+    - "<green>* You are no longer muted.</green>"
+
+  # Single quotes, because these lines contain double quotes. A double quoted YAML string
+  # containing a raw " is a parse error, and a file that will not parse stops the plugin loading
+  # rather than just looking wrong.
+  warn:
+    - '<dark_red>* You were warned by "<operator>".</dark_red>'
+    - "<dark_red>Reason: <red><reason></red></dark_red>"
+
+# Announced network wide, since permissions.see-broadcasts is "" by default. Set that permission
+# to keep these between staff instead. Set any single line to "" to announce nothing for it.
+#
+# Deliberately one flat colour end to end: these interrupt whatever people are doing, so they
+# read as a log entry rather than competing with chat for attention.
+broadcast:
+  ban: '<dark_gray>* [Security] "<player>" was banned by "<operator>" <duration_phrase> (<reason>).</dark_gray>'
+  banip: '<dark_gray>* [Security] The IP of "<player>" was banned by "<operator>" <duration_phrase> (<reason>).</dark_gray>'
+  mute: '<dark_gray>* [Security] "<player>" was muted by "<operator>" <duration_phrase> (<reason>).</dark_gray>'
+  kick: '<dark_gray>* [Security] "<player>" was kicked by "<operator>" (<reason>).</dark_gray>'
+  warn: '<dark_gray>* [Security] "<player>" was warned by "<operator>" (<reason>).</dark_gray>'
+  unban: '<dark_gray>* [Security] "<player>" was unbanned by "<revoked_by>".</dark_gray>'
+  unbanip: '<dark_gray>* [Security] The IP of "<player>" was unbanned by "<revoked_by>".</dark_gray>'
+  unmute: '<dark_gray>* [Security] "<player>" was unmuted by "<revoked_by>".</dark_gray>'
+
+errors:
+  player-not-found: '<dark_red>* No player named "<target>" was found.</dark_red>'
+  lookup-failed: '<dark_red>* The lookup for "<target>" failed. See the console.</dark_red>'
+  save-failed: "<dark_red>* The punishment could not be saved. See the console.</dark_red>"
+  exempt: '<dark_red>* "<target>" cannot be punished.</dark_red>'
+  no-address: '<dark_red>* No IP is known for "<target>". They must have connected at least once.</dark_red>'
+  nothing-to-revoke: '<dark_red>* There is no active punishment of that kind for "<target>".</dark_red>'
+
+# The chat filter. These have their own placeholders, not the punishment ones above:
+#   <player>    who wrote it
+#   <message>   what they wrote, exactly as typed
+#   <category>  which categories from filter.yml it hit
+#   <command>   the command it was typed in, for notify-command
+filter:
+  # To the player when their message is not sent at all.
+  blocked: "<dark_red>* Message not sent: it contains a word that is not allowed here.</dark_red>"
+  # To the player when words in their message were censored and the rest was sent. "" says
+  # nothing, which is usual: they see the stars in their own message anyway.
+  censored: ""
+  # To staff with the notify permission, and the console. "" tells nobody.
+  notify-chat: '<dark_gray>* [Filter] "<player>" (<category>): <message></dark_gray>'
+  notify-command: '<dark_gray>* [Filter] "<player>" in /<command> (<category>): <message></dark_gray>'
+  # The reason the automatic punishments in config.yml give, as <reason>. Plain text.
+  punishment-reason: "Inappropriate language (automatic)"

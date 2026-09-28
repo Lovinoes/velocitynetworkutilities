@@ -1,0 +1,52 @@
+# Nachrichten für VelocityNetworkPlayerInfo, deutsch mit den englischen Begriffen, die auf einem
+# Minecraft-Server ohnehin jeder benutzt: Server, Login, Online, Offline.
+#
+# Diese Datei wird mit "language: de-de-mixed" in der config.yml ausgewählt und ist die
+# Voreinstellung. Wer alles auf Deutsch will, nimmt de-de.
+#
+# broadcast.join und broadcast.leave müssen exakt wie messages.fake-join und messages.fake-leave
+# in der Sprachdatei von VelocityNetworkVanish für DIESELBE Sprache lauten, sonst sieht die
+# vorgetäuschte Abmeldung von /vanish anders aus als eine echte und verrät den Vanish.
+
+broadcast:
+  join: '<dark_gray>* "<player>" has joined the game.</dark_gray>'
+  leave: '<dark_gray>* "<player>" has left the game.</dark_gray>'
+
+pinfo:
+  # /pinfo gibt diese Zeilen von oben nach unten genau so aus. Nichts davon ist fest: Zeilen
+  # lassen sich umsortieren, löschen, wiederholen, mit Leerzeichen einrücken, und "" ergibt eine
+  # leere Zeile als Abstand.
+  #
+  # Platzhalter:
+  #   <player>       der Name des Spielers, Klick kopiert seine UUID
+  #   <uuid>         seine UUID als reiner Text
+  #   <first_login>  wann er zum ersten Mal beigetreten ist
+  #   <last_login>   der letzte Login
+  #   <last_seen>    wann er sich zuletzt getrennt hat. Nur verfügbar, wenn er als offline
+  #                  angezeigt wird und sich mindestens einmal getrennt hat.
+  #   <status>       die Zeile status.online oder status.offline weiter unten
+  #   <server>       der Server, auf dem er ist. Nur verfügbar, solange er als online gilt.
+  #
+  # Eine Zeile mit einem Platzhalter ohne Wert wird übersprungen statt mit einer Lücke gedruckt,
+  # sodass <last_seen> und <server> nur dort erscheinen, wo sie Sinn ergeben.
+  lines:
+    - "<#C1C1C1><player></#C1C1C1>"
+    - "  <gray>» Erster Login:</gray> <gray><first_login></gray>"
+    - "  <gray>» Letzter Login:</gray> <gray><last_login></gray>"
+    - "  <gray>» Zuletzt Online:</gray> <gray><last_seen></gray>"
+    - "<status>"
+
+  # Ein Klick auf <player> kopiert die UUID. Dieser Text erscheint beim Darüberfahren und ist
+  # zugleich der einzige Hinweis darauf, dass der Name anklickbar ist. "" schaltet beides ab und
+  # lässt <player> als reinen Text stehen. Platzhalter: <player>, <uuid>.
+  copy-uuid-tooltip: "<white><uuid></white>"
+
+  # Wofür <status> steht. Ein vanishter Spieler gilt für alle ohne see-vanished als offline, und
+  # für das Team, das die Berechtigung hat, als online.
+  status:
+    online: "  <gray>» Status:</gray> <gray><gradient:green:dark_green>Online</gradient> auf <gradient:blue:dark_blue><server></gradient></gray>"
+    offline: "  <gray>» Status:</gray> <gradient:red:dark_red>Offline</gradient>"
+
+  not-found: '<dark_red>* Es wurde kein Spieler mit dem Namen "<target>" gefunden.</dark_red>'
+  usage: "<gray>» /pinfo [Spieler]</gray>"
+  lookup-failed: '<dark_red>* "<target>" konnte gerade nicht nachgeschlagen werden.</dark_red>'

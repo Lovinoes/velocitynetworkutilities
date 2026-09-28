@@ -1,0 +1,31 @@
+# VelocityNetworkUtilities core configuration.
+# This module hosts the shared HikariCP pool and messaging transport used by every other module.
+
+database:
+  type: MARIADB # MARIADB | MYSQL | SQLITE
+  host: 127.0.0.1
+  port: 3306
+  name: velocity_network
+  username: root
+  password: changeme
+  parameters: "useSSL=false&autoReconnect=true&characterEncoding=utf8"
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout-ms: 8000
+    idle-timeout-ms: 600000
+    max-lifetime-ms: 1800000
+  sqlite:
+    file: plugins/VelocityNetworkUtilities/data.db
+
+messaging:
+  provider: PLUGIN_MESSAGING # PLUGIN_MESSAGING | REDIS
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password: ""
+    database: 0
+    channel-prefix: "vnu"
+
+vault:
+  table: network_vault_cache

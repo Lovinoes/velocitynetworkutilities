@@ -1,0 +1,22 @@
+# A Paper plugin, not a Bukkit one. api-version is filled in at build time from minecraftVersion
+# in gradle.properties.
+#
+# Paper plugins have their own classloader. Another plugin that wants to listen for
+# PlayerVanishStateChangeEvent has to declare PaperNetworkVanish as a dependency to see the class.
+name: PaperNetworkVanish
+version: '1.0.0'
+main: de.lovinoes.papernetworkvanish.PaperNetworkVanishPlugin
+api-version: '${minecraftVersion}'
+authors: [Lovinoes]
+description: Backend companion for VelocityNetworkVanish. Hides vanished players' entities and filters them from command completions.
+
+permissions:
+  # Declared explicitly with default false on purpose. An undeclared Bukkit permission falls
+  # back to PermissionDefault.OP, which silently grants it to every operator, so on a server
+  # where a player happens to be op, vanished players would stay fully visible to them while
+  # working correctly on a server where they are not op. Declaring it here makes the behaviour
+  # identical on every backend server and matches Velocity, where an undefined permission is
+  # simply false. Grant it through your permissions plugin to let staff see vanished players.
+  velocitynetworkvanish.see:
+    description: See players who are vanished, both their entity and their name in completions.
+    default: false

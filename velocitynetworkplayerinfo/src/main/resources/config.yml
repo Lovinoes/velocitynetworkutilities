@@ -1,0 +1,18 @@
+# VelocityNetworkPlayerInfo: join and leave broadcasts, and /pinfo.
+#
+# Every message this plugin shows lives in languages/, not here. Pick one with the option below.
+
+# Which language file under languages/ to use. Shipped: en-us, de-de, de-de-mixed.
+#
+# de-de-mixed is German with the English words everyone uses on a Minecraft server anyway
+# (Server, Login, Online). de-de is German throughout.
+#
+# To add your own, copy languages/en-us.yml, translate it, save it as languages/<code>.yml and
+# name that code here. A code has to look like a locale, such as fr-fr.
+language: en-us
+
+# Applied to every date shown. Java DateTimeFormatter pattern, German locale.
+date-format: "dd.MM.yyyy HH:mm 'Uhr'"
+
+permission:
+  use: "velocitynetworkplayerinfo.use"

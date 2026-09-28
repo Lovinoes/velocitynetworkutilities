@@ -1,0 +1,150 @@
+# Nachrichten für VelocityNetworkModeration, auf Deutsch.
+#
+# Diese Datei wird mit "language: de-de" in der config.yml ausgewählt.
+#
+# Platzhalter, die überall unten funktionieren:
+#   <id>         die Nummer der Strafe, um sich später darauf zu beziehen
+#   <type>       ban, ip_ban, mute, kick oder warn
+#   <player>     wer bestraft wurde
+#   <address>    die IP, bei einem IP-Bann
+#   <operator>   wer die Strafe verhängt hat
+#   <reason>     der angegebene Grund
+#   <created>    wann sie verhängt wurde
+#   <expires>    wann sie ausläuft, oder das Wort für dauerhaft
+#   <duration>   wie lange sie noch gilt, oder das Wort für dauerhaft
+#   <revoked_by> wer sie aufgehoben hat
+#   <status>     aktiv, abgelaufen oder aufgehoben
+
+commands:
+  ban:
+    usage: "<gray>» /ban <player> [Dauer] [Grund] [-s]</gray>"
+    success: '<green>* "<player>" wurde gebannt <dark_gray>(#<id>, <expires>)</dark_gray></green>'
+  banip:
+    usage: "<gray>» /banip <player> [Dauer] [Grund] [-s]</gray>"
+    success: '<green>* Die Adresse von "<player>" wurde gebannt <dark_gray>(#<id>, <expires>)</dark_gray></green>'
+  mute:
+    usage: "<gray>» /mute <player> [Dauer] [Grund] [-s]</gray>"
+    success: '<green>* "<player>" wurde stummgeschaltet <dark_gray>(#<id>, <expires>)</dark_gray></green>'
+  kick:
+    usage: "<gray>» /kick <player> [Grund] [-s]</gray>"
+    success: '<green>* "<player>" wurde gekickt <dark_gray>(#<id>)</dark_gray></green>'
+  warn:
+    usage: "<gray>» /warn <player> [Grund] [-s]</gray>"
+    success: '<green>* "<player>" wurde verwarnt <dark_gray>(#<id>)</dark_gray></green>'
+  unban:
+    usage: "<gray>» /unban <player> [-s]</gray>"
+    success: '<green>* "<player>" wurde entbannt <dark_gray>(#<id>)</dark_gray></green>'
+  unbanip:
+    usage: "<gray>» /unbanip <player|ip> [-s]</gray>"
+    success: '<green>* Die Adresse von "<player>" wurde entbannt <dark_gray>(#<id>)</dark_gray></green>'
+  unmute:
+    usage: "<gray>» /unmute <player> [-s]</gray>"
+    success: '<green>* "<player>" wurde entstummt <dark_gray>(#<id>)</dark_gray></green>'
+  history:
+    usage: "<gray>» /history <player></gray>"
+    header: "<gray><player> <dark_gray>|</dark_gray> <count> Eintrag/Einträge</gray>"
+    empty: "<gray>  Keine Einträge für <player>.</gray>"
+    entry: "  <dark_gray>#<id></dark_gray> <white><type></white> <dark_gray>|</dark_gray> <gray><reason></gray> <dark_gray>|</dark_gray> <gray><operator>, <created></gray> <dark_gray>|</dark_gray> <status>"
+
+# Wörter, die in mehreren Nachrichten vorkommen.
+words:
+  permanent: "permanent"
+
+  # <duration_phrase> benutzt diese beiden, damit eine Ankündigung "für 7d gebannt" lautet, aber
+  # "permanent gebannt" statt "für permanent gebannt". <duration> ist der einzige Platzhalter.
+  permanent-phrase: "permanent"
+  duration-phrase: "für <duration>"
+
+  console: "Konsole"
+
+  # Geht an den Moderator nach einer lautlosen Strafe, damit er sieht, dass sie lautlos war.
+  silent-notice: "<dark_gray>  (lautlos, nur für das Team sichtbar)</dark_gray>"
+  default-reason: "Kein Grund angegeben"
+  active: "<red>aktiv</red>"
+  expired: "<gray>abgelaufen</gray>"
+  revoked: "<green>aufgehoben</green>"
+
+# Was ein bestrafter Spieler zu sehen bekommt. Jeder Eintrag ist eine Liste von Zeilen und wird
+# als ein Block gesendet, sodass diese bei Banns und Kicks als ganzer Trennungsbildschirm taugen.
+screens:
+  ban:
+    - "<dark_red>Du wurdest vom Server gebannt.</dark_red>"
+    - ""
+    - "<gray>Grund:</gray> <white><reason></white>"
+    - "<gray>Läuft ab:</gray> <white><expires></white>"
+    - "<gray>Von:</gray> <white><operator></white>"
+    - ""
+    - "<dark_gray>#<id></dark_gray>"
+
+  ip-ban:
+    - "<dark_red>Deine Adresse wurde vom Netzwerk gebannt.</dark_red>"
+    - ""
+    - "<gray>Grund:</gray> <white><reason></white>"
+    - "<gray>Läuft ab:</gray> <white><expires></white>"
+    - "<gray>Von:</gray> <white><operator></white>"
+    - ""
+    - "<dark_gray>#<id></dark_gray>"
+
+  kick:
+    - "<dark_red>Du wurdest vom Netzwerk gekickt.</dark_red>"
+    - ""
+    - "<gray>Grund:</gray> <white><reason></white>"
+    - "<gray>Von:</gray> <white><operator></white>"
+
+  # Geht jedes Mal im Chat raus, wenn ein stummgeschalteter Spieler schreiben will, also kurz
+  # halten.
+  mute:
+    - "<dark_red>* Du bist stummgeschaltet und kannst nicht schreiben.</dark_red>"
+    - "<dark_red>Grund: <red><reason></red> <dark_gray>|</dark_gray> Noch <red><duration></red></dark_red>"
+
+  unmute:
+    - "<green>* Du bist nicht mehr stummgeschaltet.</green>"
+
+  # Einfache Anführungszeichen, weil diese Zeilen doppelte enthalten. Ein doppelt gequoteter
+  # YAML-String mit einem rohen " darin ist ein Parse-Fehler, und eine config, die nicht lädt,
+  # verhindert den Start des Plugins, statt nur falsch auszusehen.
+  warn:
+    - '<dark_red>* Du wurdest verwarnt von "<operator>".</dark_red>'
+    - "<dark_red>Grund: <red><reason></red></dark_red>"
+
+# Geht ans ganze Netzwerk, weil permissions.see-broadcasts standardmäßig "" ist. Setze diese
+# Berechtigung, um die Ankündigungen aufs Team zu beschränken. "" bei einer Zeile kündigt für
+# diese Art nichts an.
+#
+# Bewusst durchgehend eine Farbe: sie unterbrechen, was gerade läuft, und sollen wie ein
+# Logbuch-Eintrag wirken statt mit dem Chat um Aufmerksamkeit zu konkurrieren.
+broadcast:
+  ban: '<dark_gray>* [Sicherheit] "<player>" wurde von "<operator>" <duration_phrase> gebannt (<reason>).</dark_gray>'
+  banip: '<dark_gray>* [Sicherheit] Die Adresse von "<player>" wurde von "<operator>" <duration_phrase> gebannt (<reason>).</dark_gray>'
+  mute: '<dark_gray>* [Sicherheit] "<player>" wurde von "<operator>" <duration_phrase> stummgeschaltet (<reason>).</dark_gray>'
+  kick: '<dark_gray>* [Sicherheit] "<player>" wurde von "<operator>" gekickt (<reason>).</dark_gray>'
+  warn: '<dark_gray>* [Sicherheit] "<player>" wurde von "<operator>" verwarnt (<reason>).</dark_gray>'
+  unban: '<dark_gray>* [Sicherheit] "<player>" wurde von "<revoked_by>" entbannt.</dark_gray>'
+  unbanip: '<dark_gray>* [Sicherheit] Die Adresse von "<player>" wurde von "<revoked_by>" entbannt.</dark_gray>'
+  unmute: '<dark_gray>* [Sicherheit] "<player>" wurde von "<revoked_by>" entstummt.</dark_gray>'
+
+errors:
+  player-not-found: '<dark_red>* Es wurde kein Spieler mit dem Namen "<target>" gefunden.</dark_red>'
+  lookup-failed: '<dark_red>* Die Abfrage für "<target>" ist fehlgeschlagen. Siehe Konsole.</dark_red>'
+  save-failed: "<dark_red>* Die Strafe konnte nicht gespeichert werden. Siehe Konsole.</dark_red>"
+  exempt: '<dark_red>* "<target>" kann nicht bestraft werden.</dark_red>'
+  no-address: '<dark_red>* Für "<target>" ist keine Adresse bekannt. Der Spieler muss sich einmal verbunden haben.</dark_red>'
+  nothing-to-revoke: '<dark_red>* Für "<target>" gibt es keine aktive Strafe dieser Art.</dark_red>'
+
+# Der Chatfilter. Hier gelten eigene Platzhalter, nicht die der Strafen oben:
+#   <player>    wer es geschrieben hat
+#   <message>   was geschrieben wurde, genau wie getippt
+#   <category>  welche Kategorien aus der filter.yml getroffen wurden
+#   <command>   der Befehl, in dem es getippt wurde, für notify-command
+filter:
+  # An den Spieler, wenn seine Nachricht gar nicht gesendet wird.
+  blocked: "<dark_red>* Nachricht nicht gesendet: Sie enthält ein Wort, das hier nicht erlaubt ist.</dark_red>"
+  # An den Spieler, wenn Wörter zensiert und der Rest gesendet wurde. "" sagt nichts, was
+  # üblich ist: die Sternchen sieht er in seiner eigenen Nachricht ohnehin.
+  censored: ""
+  # An Teammitglieder mit der Benachrichtigungs-Berechtigung und an die Konsole. "" sagt es
+  # niemandem.
+  notify-chat: '<dark_gray>* [Filter] "<player>" (<category>): <message></dark_gray>'
+  notify-command: '<dark_gray>* [Filter] "<player>" in /<command> (<category>): <message></dark_gray>'
+  # Der Grund, den die automatischen Strafen aus der config.yml als <reason> angeben. Reiner Text.
+  punishment-reason: "Unangemessene Sprache (automatisch)"

@@ -1,0 +1,8 @@
+# PlayerUUIDCacheVelocity uses the shared HikariCP pool from VelocityNetworkUtilities.
+
+table:
+  name: uuid_cache
+
+mojang:
+  lookup-timeout-ms: 5000
+  cache-lookup-failures: true

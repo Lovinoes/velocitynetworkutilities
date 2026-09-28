@@ -1,0 +1,27 @@
+# Messages for VelocityNetworkVanish, in English.
+#
+# Pick this file with "language: en-us" in config.yml.
+
+messages:
+  vanish-enabled: "<green>* You are now <gradient:green:dark_green>vanished</gradient>.</green>"
+  vanish-disabled: "<dark_gray>* You are no longer <gradient:red:dark_red>vanished</gradient>.</dark_gray>"
+
+  # /silentvanish (also /svanish, /sv) toggles vanish without announcing anything.
+  silent-vanish-enabled: "<green>* You are now <gradient:green:dark_green>vanished</gradient>. <dark_gray>(silently)</dark_gray></green>"
+  silent-vanish-disabled: "<dark_gray>* You are no longer <gradient:red:dark_red>vanished</gradient>. (silently)</dark_gray>"
+
+  # /vanish announces a fake leave, and unvanishing announces a fake join, so to everyone else it
+  # looks like an ordinary disconnect and reconnect. Anyone holding the see-vanished permission
+  # never sees these, since they can still see you anyway.
+  #
+  # These must read exactly the same as broadcast.join and broadcast.leave in
+  # VelocityNetworkPlayerInfo's language file for the SAME language, or a fake leave looks
+  # different from a real one and gives the vanish away. <player> is the only placeholder, and
+  # "" announces nothing for that direction.
+  fake-join: '<dark_gray>* "<player>" has joined the game.</dark_gray>'
+  fake-leave: '<dark_gray>* "<player>" has left the game.</dark_gray>'
+
+  # Instead of revealing a vanished player to a protected command such as /tpa, as though they
+  # were not online at all. <target> is the name that was typed.
+  target-not-found: '<dark_red>* No player named "<target>" was found.</dark_red>'
+  players-only: "<dark_red>* Only players can use this command.</dark_red>"

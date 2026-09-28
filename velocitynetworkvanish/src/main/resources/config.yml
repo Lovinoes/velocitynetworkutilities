@@ -1,0 +1,52 @@
+# VelocityNetworkVanish: network wide vanish, with the physical hiding done by PaperNetworkVanish
+# on each backend server.
+#
+# Every message this plugin shows lives in languages/, not here. Pick one with the option below.
+
+# Which language file under languages/ to use. Shipped: en-us, de-de, de-de-mixed.
+#
+# de-de-mixed is German with the English words everyone uses on a Minecraft server anyway
+# (Server, vanished). de-de is German throughout.
+#
+# To add your own, copy languages/en-us.yml, translate it, save it as languages/<code>.yml and
+# name that code here. A code has to look like a locale, such as fr-fr.
+language: en-us
+
+table:
+  name: network_vanish_state
+
+# Real Minecraft plugin-messaging channel telling the PaperNetworkVanish companion plugin
+# (deploy it on every backend server) to hide or show a vanished player's physical entity.
+# Must match papernetworkvanish's own config.yml "channel" value.
+broadcast-channel: "network:vanish"
+
+permission:
+  vanish: "velocitynetworkvanish.vanish"
+  see-vanished: "velocitynetworkvanish.see"
+
+# /msg, /tell, /w, /r and their aliases are not listed here: VelocityNetworkChat registers
+# those as native Velocity commands and applies its own vanish check before delivering.
+# Denying them here via CommandExecuteEvent would disconnect the player, since /msg/tell/w
+# carry signed chat arguments in vanilla and Velocity refuses to deny a signed command this
+# way. tpa/tpahere remain here because they're implemented by an external plugin (e.g.
+# HuskHomes) that has no vanish awareness of its own, and are not signed commands.
+protected-commands:
+  - "tpa"
+  - "tpahere"
+
+# A small sound plays for the staff member toggling vanish, so there is feedback even when
+# nothing is announced. Set enabled: false, or key: "", to turn either off.
+sound:
+  vanish:
+    enabled: true
+    key: "minecraft:block.amethyst_block.break"
+    # MASTER, MUSIC, RECORD, WEATHER, BLOCK, HOSTILE, NEUTRAL, PLAYER, AMBIENT, VOICE, UI
+    source: MASTER
+    volume: 0.35
+    pitch: 1.5
+  unvanish:
+    enabled: true
+    key: "minecraft:block.amethyst_block.chime"
+    source: MASTER
+    volume: 0.35
+    pitch: 1.2

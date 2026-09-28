@@ -1,0 +1,143 @@
+# Messages for VelocityNetworkChat, in English.
+#
+# Pick this file with "language: en-us" in config.yml.
+#
+# Channel formats and the player-action buttons stay in config.yml: those are layout and colour
+# for each channel and button rather than wording, and they are where you style your chat.
+
+mentions:
+  # The highlight put on an @name mention. <name> is the real name, correctly capitalised.
+  highlight-format: "<yellow>@<name></yellow>"
+
+  messages:
+    sound-enabled: "<green>* You will now hear a sound when someone mentions you.</green>"
+    sound-disabled: "<dark_gray>* You will no longer hear a sound when someone mentions you.</dark_gray>"
+
+# Sent to a player whose current channel they may no longer write in, such as staff who switched
+# into it and have since lost the permission. A prefix-trigger never routes anyone into a channel
+# they cannot write in: for them the prefix is ordinary text. Placeholders: <channel>,
+# <channel_key>. Set to "" to drop the message silently instead.
+no-channel-permission: '<dark_red>* You may not write in the "<channel>" channel.</dark_red>'
+
+# Replies to /ch, the channel shortcuts and /r. <channel> is the channel's display name, or in
+# channel-unknown whatever was typed. A channel the player may not write in is answered with
+# channel-unknown too, exactly as if it did not exist, so nobody learns that it does.
+commands:
+  players-only: "<dark_red>* Only players can use this command.</dark_red>"
+  channel-usage: "<gray>» /ch [channel]</gray>"
+  channel-switched: "<gray>* You are now talking in <white><channel></white>.</gray>"
+  channel-unknown: '<dark_red>* There is no channel named "<channel>".</dark_red>'
+  reply-usage: "<gray>» /r [message]</gray>"
+
+# Sent instead of a message that anti-spam in config.yml refused; the message itself is not sent.
+# <seconds> in too-fast is how long is left. "" refuses the message without saying anything.
+anti-spam:
+  too-fast: "<dark_red>* Message not sent. Please wait <seconds>s between messages.</dark_red>"
+  repeated: "<dark_red>* Message not sent. You just said that.</dark_red>"
+
+private-message:
+  outgoing-format: "<gray>[<#C1C1C1>You</#C1C1C1> -> <#C1C1C1><target></#C1C1C1>]</gray> <message>"
+  incoming-format: "<gray>[<#C1C1C1><sender></#C1C1C1> -> <#C1C1C1>You</#C1C1C1>]</gray> <message>"
+  not-found-format: '<dark_red>* No player named "<target>" was found.</dark_red>'
+  no-reply-target-format: "<dark_red>* You have no one to reply to.</dark_red>"
+
+player-actions:
+  # Tooltip on the name itself, and the only hint that it can be clicked. "" for none.
+  name-hover: "<gray>Click for actions</gray>"
+
+  # The row itself. <actions> is the buttons, <player> is the name they belong to.
+  line-format: "<gray>»</gray> <actions>"
+
+  # What each button says. What it DOES is in config.yml under the same name.
+  actions:
+    msg:
+      label: "<green>[msg]</green>"
+      hover: "<gray>Message <player></gray>"
+    info:
+      label: "<green>[info]</green>"
+      hover: "<gray>Player info for <player></gray>"
+    mute:
+      label: "<gradient:gold:yellow>[mute]</gradient>"
+      hover: "<gray>Mute <player></gray>"
+    ban:
+      label: "<gradient:gold:yellow>[ban]</gradient>"
+      hover: "<gray>Ban <player></gray>"
+
+# How each channel is written. Which permissions, triggers, scope and range it has are in
+# config.yml, because those are the same whatever language the server speaks.
+#
+# Placeholders: <player>, <message>, <server>, <channel>, <channel_key>, <vault_prefix>,
+# <vault_suffix>, <vault_group>. PlaceholderAPI %placeholders% work too with PAPIProxyBridge.
+channels:
+  LOCAL:
+    display-name: "Local"
+    format: "<gray>[<server>]</gray> <#55ffff>[L]</#55ffff> <white><#C1C1C1><player></#C1C1C1>: <message></white>"
+  NEAR:
+    display-name: "Near"
+    format: "<gray>[<server>]</gray> <gradient:gray:dark_gray>[N]</gradient> <white><#C1C1C1><player></#C1C1C1>: <message></white>"
+  GLOBAL:
+    display-name: "Global"
+    format: "<gray>[<server>]</gray> <dark_green>[G]</dark_green> <white><#C1C1C1><player></#C1C1C1>: <message></white>"
+  STAFF:
+    display-name: "Staff"
+    format: "<gray>[<server>]</gray> <gradient:#ff55ff:#aa00aa>[STAFF]</gradient> <white><#C1C1C1><player></#C1C1C1>: <message></white>"
+
+# [item], [inv] and [pos]. <player> is the sender and <server> the backend they are on, everywhere
+# in this section.
+showcase:
+  # Sent instead of the message when the cooldown in config.yml has not passed; the message itself
+  # is not sent. <seconds> is how long is left. "" drops the message without saying anything.
+  cooldown: "<dark_red>* Message not sent. You can show something again in <seconds>s.</dark_red>"
+
+  # Shown in place of a token the backend could not answer for, such as when PaperNetworkChat is
+  # missing there. <token> is what was typed. "" leaves the token exactly as typed.
+  unavailable: ""
+
+  item:
+    # <name> takes on the colour around it; <styled_name> keeps the item's own formatting.
+    # <amount> is the stack size and <type> the item id, such as minecraft:diamond_sword.
+    format: "<aqua>[<name>]</aqua>"
+    format-amount: "<aqua>[<name> <dark_aqua>x<amount></dark_aqua>]</aqua>"
+    empty: "<aqua>[<gray>empty hand</gray>]</aqua>"
+    empty-hover:
+      - "<gray><player> is not holding anything.</gray>"
+
+    # The tooltip, one line per entry. Three special lines expand into as many as they need:
+    #   <enchantments>  one line per enchantment, using enchantment-line
+    #   <lore>          one line per lore line, using lore-line
+    #   <durability>    durability, or unbreakable, or nothing for an item that cannot break
+    hover:
+      - "<styled_name>"
+      - "<enchantments>"
+      - "<lore>"
+      - "<durability>"
+      - "<dark_gray><type></dark_gray>"
+    enchantment-line: "<line>"
+    # Lore that has no colours of its own shows purple and italic, the way the game shows it.
+    lore-line: "<dark_purple><italic><line></italic></dark_purple>"
+    durability: "<gray>Durability: <white><remaining></white> / <white><max></white></gray>"
+    unbreakable: "<blue>Unbreakable</blue>"
+
+  inventory:
+    format: "<aqua>[<player>'s inventory]</aqua>"
+    header:
+      - "<gray>Inventory of <white><player></white></gray>"
+    # A heading before each part that has something in it. "" for no heading.
+    sections:
+      hotbar: "<gray>Hotbar</gray>"
+      storage: "<gray>Inventory</gray>"
+      armor: "<gray>Armor</gray>"
+      offhand: "<gray>Off hand</gray>"
+    # <name>, <styled_name>, <amount> and <type> as for items.
+    entry: "<dark_gray> • </dark_gray><styled_name> <dark_gray>x<amount></dark_gray>"
+    empty: "<dark_gray>Nothing in it.</dark_gray>"
+    # When there are more items than max-entries in config.yml allows. <count> is how many.
+    more: "<dark_gray>... and <count> more</dark_gray>"
+
+  position:
+    # <world>, <x>, <y> and <z> are where the player stands. <server> comes from the proxy.
+    format: "<aqua>[<x>, <y>, <z>]</aqua>"
+    hover:
+      - "<gray>Server: <white><server></white></gray>"
+      - "<gray>World: <white><world></white></gray>"
+      - "<gray>X: <white><x></white>  Y: <white><y></white>  Z: <white><z></white></gray>"

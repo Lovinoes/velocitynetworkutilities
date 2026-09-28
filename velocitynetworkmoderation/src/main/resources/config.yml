@@ -1,0 +1,165 @@
+# VelocityNetworkModeration: bans, mutes, kicks, warnings and history for the whole network.
+#
+# Uses the database configured in VelocityNetworkUtilities, so there is nothing to set up here.
+#
+# Muting relies on this plugin seeing a chat message before VelocityNetworkChat formats it, which
+# it does by running at a higher event priority. Both are required for mutes to stop chat, and
+# SignedVelocity is required on the proxy and every backend for either to cancel a message at all.
+#
+# Every message this plugin shows lives in languages/, not here.
+
+# Which language file under languages/ to use. Shipped: en-us, de-de, de-de-mixed.
+#
+# de-de-mixed is German with the English words everyone uses on a Minecraft server anyway
+# (Server, Security, Team). de-de is German throughout.
+#
+# To add your own, copy languages/en-us.yml, translate it, save it as languages/<code>.yml and
+# name that code here. A code has to look like a locale, such as fr-fr.
+language: en-us
+
+tables:
+  punishments: network_punishments
+  addresses: network_player_addresses
+
+# Applied to every date shown. Java DateTimeFormatter pattern, German locale.
+date-format: "dd.MM.yyyy HH:mm 'Uhr'"
+
+# Reasons longer than this are cut. Keep it at or below the reason column's width.
+max-reason-length: 255
+
+# How many entries /history shows, newest first.
+history-limit: 25
+
+# Type this anywhere in a punishment command to keep it off the public announcement:
+# "/ban Notch -s 7d Xray" and "/ban Notch 7d Xray -s" both work, and it never ends up in the
+# reason. The punishment itself is unchanged, still recorded, and still shown to the player it
+# lands on. Only who hears about it changes, to permissions.see-silent below.
+#
+# It is offered in tab completion. Set to "" to turn silent punishments off entirely.
+silent-flag: "-s"
+
+# Offered in the duration position when completing. Any duration the commands accept can still
+# be typed; these are just the common ones. Format: 30s, 15m, 6h, 7d, 2w, 1mo, 1y, 1d12h, perm.
+duration-suggestions: ["10m", "30m", "1h", "6h", "12h", "1d", "3d", "7d", "14d", "30d", "perm"]
+
+permissions:
+  ban: "velocitynetworkmoderation.ban"
+  banip: "velocitynetworkmoderation.banip"
+  mute: "velocitynetworkmoderation.mute"
+  kick: "velocitynetworkmoderation.kick"
+  warn: "velocitynetworkmoderation.warn"
+  unban: "velocitynetworkmoderation.unban"
+  unbanip: "velocitynetworkmoderation.unbanip"
+  unmute: "velocitynetworkmoderation.unmute"
+  history: "velocitynetworkmoderation.history"
+
+  # Nobody holding this can be punished. It is checked against the player while they are online,
+  # which is the only time the proxy knows their permissions, so it cannot protect someone who
+  # is offline. Give it to staff you never want caught by a misclick.
+  exempt: "velocitynetworkmoderation.exempt"
+
+  # Who sees the broadcasts. Leave "" to broadcast to everyone on the network, or set a
+  # permission to keep punishments between staff.
+  see-broadcasts: ""
+
+  # Who sees a punishment issued with the silent flag. Unlike see-broadcasts, "" here means
+  # nobody rather than everyone, since a silent punishment nobody asked to hide would defeat
+  # the point. The console is always told either way, because it is the log.
+  see-silent: "velocitynetworkmoderation.seesilent"
+
+mute:
+  # A mute that only stops chat is barely a mute, since /msg is still open. Every command listed
+  # here is refused while muted. Give the real command names, without the slash; aliases are
+  # separate commands to the proxy and have to be listed too.
+  blocked-commands:
+    - "msg"
+    - "tell"
+    - "w"
+    - "whisper"
+    - "pm"
+    - "m"
+    - "r"
+    - "reply"
+    - "me"
+
+# The chat filter. The words themselves, and what each group of them does, are in filter.yml.
+# What players and staff are told is in the language file under "filter".
+filter:
+  enabled: true
+
+  # Players holding this are never filtered. Give it only to staff who need to quote things.
+  bypass-permission: "velocitynetworkmoderation.filter.bypass"
+
+  # Players holding this are told whenever the filter catches something, and what it was. The
+  # console is always told. "" tells nobody but the console.
+  notify-permission: "velocitynetworkmoderation.filter.notify"
+
+  # Replaces each character of a censored word. "" removes the word instead.
+  censor-character: "*"
+
+  # Commands that are really chat and are checked too, named without the slash. Aliases are
+  # separate commands to the proxy and have to be listed as well.
+  #   commands              every argument is checked
+  #   commands-with-target  the first argument is a player's name and is left alone, so nobody
+  #                         with an unlucky name becomes impossible to message
+  #
+  # A censored word in a command the proxy runs itself, such as /msg, is censored. In a command
+  # a backend runs, such as /me, the message is blocked instead: a 1.19.1+ client's command
+  # cannot be altered on its way to a backend without disconnecting the player.
+  commands: ["r", "reply", "me"]
+  commands-with-target: ["msg", "tell", "w", "whisper", "pm", "m"]
+
+  # What happens to a player who keeps at it. Only categories with "counts: true" in filter.yml
+  # count. A step runs its commands, as the console, when the player's count within "within"
+  # reaches exactly "violations", so each step happens once as the count climbs.
+  #   within    30s, 15m, 6h, 7d and so on
+  #   commands  any proxy commands. <player> is the name, <uuid> the id, and <reason> the
+  #             filter.punishment-reason from the language file. What the player wrote is
+  #             never put into a command.
+  #
+  # Set to [] for no automatic punishments. Offences are remembered for the longest "within"
+  # below, and survive leaving and rejoining.
+  punishments:
+    - violations: 3
+      within: "10m"
+      commands: ["warn <player> <reason>"]
+    - violations: 5
+      within: "30m"
+      commands: ["mute <player> 30m <reason>"]
+
+# Each command's name, aliases, and how long it lasts when no duration is typed. What each one
+# SAYS lives in the language file.
+#
+# default-duration: "" means permanent. Anything else uses the same format as the argument:
+# 30s, 15m, 6h, 7d, 2w, 1mo, 1y, or several together like 1d12h.
+commands:
+  ban:
+    name: "ban"
+    aliases: ["tempban"]
+    default-duration: ""
+  banip:
+    name: "banip"
+    aliases: ["ipban"]
+    default-duration: ""
+  mute:
+    name: "mute"
+    aliases: ["tempmute"]
+    default-duration: ""
+  kick:
+    name: "kick"
+    aliases: []
+  warn:
+    name: "warn"
+    aliases: []
+  unban:
+    name: "unban"
+    aliases: ["pardon"]
+  unbanip:
+    name: "unbanip"
+    aliases: ["unipban"]
+  unmute:
+    name: "unmute"
+    aliases: []
+  history:
+    name: "history"
+    aliases: ["punishments", "checkpunishments"]

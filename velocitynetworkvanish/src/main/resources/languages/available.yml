@@ -1,0 +1,12 @@
+# The languages this plugin ships. Every one listed here is written into languages/ on start, so
+# you can read and edit any of them without unpacking the jar.
+#
+# A classloader cannot list the contents of a folder inside a jar, which is why this file exists
+# rather than the folder being scanned.
+#
+# Adding your own translation does not need an entry here: save it as languages/<code>.yml and
+# name that code in config.yml. This list only decides what gets written out for you.
+languages:
+  - en-us
+  - de-de
+  - de-de-mixed

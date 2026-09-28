@@ -1,0 +1,8 @@
+# A Paper plugin, not a Bukkit one. api-version is filled in at build time from minecraftVersion
+# in gradle.properties.
+name: PaperNetworkChat
+version: '1.0.0'
+main: de.lovinoes.papernetworkchat.PaperNetworkChatPlugin
+api-version: '${minecraftVersion}'
+authors: [Lovinoes]
+description: Backend half of the network chat. Tells the proxy who is in range for distance-limited channels, and what a player is holding, carrying and standing on for [item], [inv] and [pos].

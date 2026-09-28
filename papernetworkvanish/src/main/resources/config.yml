@@ -1,0 +1,10 @@
+# Must match velocitynetworkvanish's config.yml "broadcast-channel" value exactly.
+channel: "network:vanish"
+
+# Checked with Bukkit's own permission system on this server.
+#
+# This exact node is declared in paper-plugin.yml with default:false, which is what stops operators
+# from automatically receiving it. If you change it here, either declare the new node in your
+# permissions plugin with a false default, or vanished players will be visible to every op on
+# this server. The plugin logs a warning on startup if this no longer matches the declared node.
+see-vanished-permission: "velocitynetworkvanish.see"

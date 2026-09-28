@@ -1,0 +1,238 @@
+# VelocityNetworkChat owns every channel on the network: formats, ranges, permissions and /ch.
+#
+# Requires SignedVelocity (on the proxy AND every backend server). Without it, cancelling a
+# 1.19.1+ client's signed chat message at the proxy disconnects them.
+#
+# PaperNetworkChat on each backend server is what lets the proxy see into a world: who is within
+# range for a distance-limited channel, and what a player holds, carries and stands on for
+# [item], [inv] and [pos]. Without it a distance-limited channel falls back to the sender's whole
+# server, and those three stay as typed. Update both plugins together; they share a wire format.
+#
+# Wording lives in languages/. What things DO lives here.
+
+# Which language file under languages/ to use. Shipped: en-us, de-de, de-de-mixed.
+#
+# de-de-mixed is German with the English words everyone uses on a Minecraft server anyway
+# (Channel, Server). de-de is German throughout.
+#
+# To add your own, copy languages/en-us.yml, translate it, save it as languages/<code>.yml and
+# name that code here. A code has to look like a locale, such as fr-fr.
+language: en-us
+
+default-channel: GLOBAL
+
+# Players with this permission may use legacy & codes and MiniMessage tags in their messages.
+chat:
+  color-permission: "velocitynetworkchat.color"
+
+messaging:
+  # Must match PaperNetworkChat's messaging.channel value on every backend server.
+  channel: "network:chat"
+
+  # How long to wait for a backend to answer before giving up on it. A distance-limited message
+  # that times out goes to the sender's whole server rather than being lost, and an [item] that
+  # times out stays as typed. Long enough to ride out a lag spike, short enough that a missing
+  # PaperNetworkChat does not hold chat up for long.
+  backend-timeout-ms: 1000
+
+# Typing @someone highlights their name and pings them.
+#
+# A name is only highlighted when it belongs to a player who is online AND who the sender is
+# allowed to see, so @-ing a vanished staff member cannot be used to check whether they are on.
+mentions:
+  sound:
+    enabled: true
+    key: "minecraft:block.note_block.pling"
+    # MASTER, MUSIC, RECORD, WEATHER, BLOCK, HOSTILE, NEUTRAL, PLAYER, AMBIENT, VOICE, UI
+    source: MASTER
+    # 0.0 to 1.0. Kept low on purpose so a ping is noticeable without being loud.
+    volume: 0.4
+    pitch: 1.2
+
+  # Reserved: a channel prefix-trigger of "@" would swallow every message that starts with a
+  # mention, so this plugin refuses to use one and logs a warning at startup instead.
+
+  # Players toggle their own ping sound with /mentionsound (also /pingsound, /pingtoggle).
+  # The choice is stored in this table so it survives a relog.
+  table: chat_settings
+
+# Clicking a player's name in chat prints a row of buttons for acting on them.
+#
+# Minecraft has no pop-up menu, so this happens in two steps: the name runs the hidden command
+# below, and that command prints the row. The row has to be a real chat message, because that is
+# the only thing whose parts can be clicked; a hover tooltip could show the same text but none of
+# it would do anything.
+player-actions:
+  enabled: true
+
+  # The hidden command the name click runs. Players never type it. Change it only if something
+  # else on the proxy already owns this name.
+  command: "chatactions"
+
+  separator: " "
+
+  # Each button, in order. What it SAYS is in the language file under the same name.
+  #   type        run     clicks the command immediately
+  #               suggest types it into the player's chat box so they can finish it
+  #   command     what to run or type. <player> is replaced with the name.
+  #   permission  leave out or "" for a button everyone gets. Otherwise only players holding it
+  #               see the button, which is how the moderation ones stay hidden from players.
+  #
+  # The permission is checked when the name is clicked, not when the message is written, because
+  # a chat message is rendered once for everyone and the name in it cannot differ per reader.
+  #
+  # A button with no label (in the language file) or no command is skipped with a warning
+  # rather than stopping the plugin from loading.
+  #
+  # Buttons appear in the order written here. Each has a name of your choosing, which is only
+  # used to tell them apart: it is what lets a plugin update add a new button to a config you
+  # have already edited, instead of leaving you to copy it in by hand.
+  #
+  # The moderation buttons only do anything with VelocityNetworkModeration installed, and use
+  # suggest rather than run on purpose: nobody should be one misclick away from a permanent ban
+  # with no reason attached.
+  actions:
+    msg:
+      type: suggest
+      command: "/msg <player> "
+    info:
+      type: run
+      command: "/pinfo <player>"
+    mute:
+      type: suggest
+      command: "/mute <player> "
+      permission: "velocitynetworkmoderation.mute"
+    ban:
+      type: suggest
+      command: "/ban <player> "
+      permission: "velocitynetworkmoderation.ban"
+
+# [item], [inv] and [pos]: typing one in any chat, /msg and /r included, shows what you are
+# holding, carrying or standing on, with the details on hover. What they look like is in the
+# language file; what they do is here.
+#
+# The data comes from PaperNetworkChat on the sender's backend, so a message containing one costs
+# a round trip to it. A message without one costs nothing.
+# Keeps players from flooding chat. A refused message is not sent at all and the player is told
+# why; it does not count as their last message, so hammering enter does not make the wait longer.
+anti-spam:
+  # The shortest time between two messages from the same player. 0 turns it off.
+  cooldown-ms: 1500
+
+  # The same message again, to the same channel or the same player, within this long is not
+  # sent. Case, spaces and punctuation do not make it different: "hi" and "HI !" are the same.
+  # 0 turns it off.
+  repeat-window-ms: 10000
+
+  # Whether /msg and /r count too. They share the one timer with channel chat, so spam cannot
+  # just move over to private messages.
+  private-messages: true
+
+  # Players holding this are never held back. "" gives nobody a way around it.
+  bypass-permission: "velocitynetworkchat.antispam.bypass"
+
+showcase:
+  enabled: true
+
+  # Per player, between messages that show something. A message without a token never counts.
+  # Until it has passed, a message with a token is not sent at all, so spamming [item] reaches
+  # nobody; the player is told how long is left instead. 0 turns the cooldown off.
+  cooldown-ms: 3000
+
+  # Players holding this have no cooldown. "" gives nobody a way around it.
+  cooldown-bypass-permission: "velocitynetworkchat.showcase.bypasscooldown"
+
+  # How many tokens one message may turn into showcases. Each can carry a large hover that goes to
+  # every recipient, so past this they stay as typed rather than flooding everyone's connection.
+  max-per-message: 3
+
+  # For each kind:
+  #   enabled     false turns it off entirely
+  #   tokens      what to type for it, matched without regard to case. Any text works as a
+  #               token, but brackets keep it from matching inside an ordinary sentence.
+  #   permission  "" for everyone, otherwise only players holding it
+  #   click       what clicking the showcase does:
+  #                 type   none, suggest, run or copy (to the clipboard)
+  #                 value  <player> and <server> always, and for position also <world>, <x>,
+  #                        <y> and <z>. An item's own name is never available here: it is
+  #                        chosen by whoever made the item, and must not end up in a command
+  #                        somebody else runs.
+  item:
+    enabled: true
+    tokens: ["[item]", "[i]", "[hand]"]
+    permission: ""
+    click:
+      type: none
+      value: ""
+
+  inventory:
+    enabled: true
+    tokens: ["[inv]", "[inventory]"]
+    permission: ""
+    # How many item lines the hover lists before summing up the rest. A full inventory is 41.
+    max-entries: 41
+    click:
+      type: none
+      value: ""
+
+  position:
+    enabled: true
+    tokens: ["[pos]", "[position]", "[loc]", "[location]"]
+    permission: ""
+    click:
+      type: copy
+      value: "<x> <y> <z>"
+
+channels:
+  # scope: NETWORK  -> everyone on the network, distance ignored
+  # scope: SERVER   -> only the sender's own backend server
+  #   distance: 0   -> that whole server
+  #   distance: N   -> only players within N blocks, in the same world (needs PaperNetworkChat)
+  #
+  # permission       who may WRITE into the channel
+  # read-permission  who may SEE what is written. Leave it out and it matches permission, so a
+  #                  channel you restricted is restricted both ways. Set it to "" for a channel
+  #                  anyone may read, which is what the ordinary public channels below are.
+  LOCAL:
+    permission: "velocitynetworkchat.channel.local"
+    read-permission: ""
+    command-triggers: ["l", "local"]
+    prefix-trigger: ""
+    scope: SERVER
+    distance: 100
+
+  NEAR:
+    permission: "velocitynetworkchat.channel.near"
+    read-permission: ""
+    command-triggers: ["n", "near"]
+    prefix-trigger: ""
+    scope: SERVER
+    distance: 64
+
+  GLOBAL:
+    permission: "velocitynetworkchat.channel.global"
+    read-permission: ""
+    command-triggers: ["g", "global"]
+    prefix-trigger: "!"
+    scope: NETWORK
+    distance: 0
+
+  # The one channel that is NOT public: read-permission is left at the write permission, so only
+  # staff see it. Setting it to "" here would broadcast staff chat to the whole network.
+  STAFF:
+    permission: "velocitynetworkchat.channel.staff"
+    command-triggers: ["sc", "staffchat"]
+    prefix-trigger: "#"
+    scope: NETWORK
+    distance: 0
+
+# Reads the network_vault_cache table owned by VelocityNetworkUtilities. Populate its uuid,
+# primary_group, prefix and suffix columns from your permission plugin so vault_prefix resolves.
+vault:
+  prefix-placeholder-fallback: ""
+
+# Proxy-owned /msg (aliases: /tell, /w, /whisper, /pm, /m) and /r (alias: /reply). Looked up
+# network-wide via Velocity's own player list, so messaging works across backend servers
+# instead of being limited to one server's plugin.
+private-message:
+  permission: "velocitynetworkchat.msg"

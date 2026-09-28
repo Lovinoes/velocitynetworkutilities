@@ -1,0 +1,53 @@
+# Build output
+build/
+bin/
+out/
+deploy/
+*.class
+
+# Gradle
+.gradle/
+gradle-app.setting
+.gradletasknamecache
+# The wrapper itself must stay in the repo so ./gradlew works on a fresh clone.
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Compiled plugin jars. The wrapper jar above is re-included on purpose.
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local secrets and overrides. The config.yml files under src/main/resources are shipped
+# defaults with placeholder credentials and are meant to be committed; never commit a live
+# server's config, which contains the real database password.
+.env
+.env.*
+secrets.*
+*.local.yml
+*.local.yaml
+local.properties
+credentials.*
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.classpath
+.project
+.settings/
+.factorypath
+nbproject/
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code settings that are specific to one machine.
+.claude/settings.local.json

@@ -1,0 +1,49 @@
+# Messages for VelocityNetworkPlayerInfo, in English.
+#
+# Pick this file with "language: en-us" in config.yml.
+#
+# broadcast.join and broadcast.leave must read exactly the same as messages.fake-join and
+# messages.fake-leave in VelocityNetworkVanish's language file for the SAME language, or
+# /vanish's fake leave looks different from a real one and gives the vanish away.
+
+broadcast:
+  join: '<dark_gray>* "<player>" has joined the game.</dark_gray>'
+  leave: '<dark_gray>* "<player>" has left the game.</dark_gray>'
+
+pinfo:
+  # /pinfo prints these top to bottom, exactly as listed. Nothing here is fixed: reorder them,
+  # delete them, repeat them, indent them with spaces, or add "" for a blank spacer line.
+  #
+  # Placeholders:
+  #   <player>       the player's name, click to copy their UUID
+  #   <uuid>         their UUID as plain text
+  #   <first_login>  first time they ever joined
+  #   <last_login>   most recent login
+  #   <last_seen>    when they last disconnected. Only available for a player shown as offline
+  #                  who has disconnected at least once since this plugin started recording.
+  #   <status>       the status.online or status.offline line below
+  #   <server>       the backend server they are on. Only available while shown as online.
+  #
+  # A line using a placeholder that has no value for this player is skipped instead of printed
+  # with a gap, so <last_seen> and <server> lines appear only where they make sense.
+  lines:
+    - "<#C1C1C1><player></#C1C1C1>"
+    - "  <gray>» First login:</gray> <gray><first_login></gray>"
+    - "  <gray>» Last login:</gray> <gray><last_login></gray>"
+    - "  <gray>» Last seen:</gray> <gray><last_seen></gray>"
+    - "<status>"
+
+  # Clicking <player> copies that player's UUID. This is the tooltip shown on hover, which is
+  # also the only hint that the name is clickable at all, so setting it to "" turns the whole
+  # thing off and leaves <player> as plain text. Placeholders: <player>, <uuid>.
+  copy-uuid-tooltip: "<white><uuid></white>"
+
+  # What <status> expands to. A vanished player reads as offline to anyone without the
+  # see-vanished permission, and as online to staff who have it.
+  status:
+    online: "  <gray>» Status:</gray> <gray><gradient:green:dark_green>Online</gradient> on <gradient:blue:dark_blue><server></gradient></gray>"
+    offline: "  <gray>» Status:</gray> <gradient:red:dark_red>Offline</gradient>"
+
+  not-found: '<dark_red>* No player named "<target>" was found.</dark_red>'
+  usage: "<gray>» /pinfo [player]</gray>"
+  lookup-failed: '<dark_red>* "<target>" could not be looked up right now.</dark_red>'

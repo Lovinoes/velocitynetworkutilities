@@ -1,0 +1,17 @@
+# PaperNetworkChat: the backend half of the network chat system.
+#
+# This plugin is deliberately thin. VelocityNetworkChat on the proxy owns the channels, their
+# formats, their ranges, colour handling, /ch and every message. What a proxy cannot do is see a
+# backend's world, so it asks this plugin two things over the channel below:
+#
+#   - who is within range of a player, so a distance-limited channel reaches only them
+#   - what a player is holding and carrying and where they stand, for [item], [inv] and [pos]
+#
+# The proxy then renders and delivers everything itself. That means there are no channel,
+# format or message settings here: change those on the proxy.
+#
+# Update this plugin and VelocityNetworkChat together. They share a wire format.
+
+messaging:
+  # Must match VelocityNetworkChat's messaging.channel value exactly.
+  channel: "network:chat"
