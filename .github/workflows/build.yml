@@ -96,7 +96,7 @@ jobs:
           else
             gh release create "$tag" deploy/*.jar \
               --target "$GITHUB_SHA" \
-              --title "VelocityNetworkUtilities" \
+              --title "VelocityNetworkUtilities (${BRANCH})" \
               --notes-file release-notes.md \
               "$latest"
           fi
