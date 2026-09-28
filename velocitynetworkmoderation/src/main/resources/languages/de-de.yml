@@ -13,7 +13,10 @@
 #   <expires>    wann sie ausläuft, oder das Wort für dauerhaft
 #   <duration>   wie lange sie noch gilt, oder das Wort für dauerhaft
 #   <revoked_by> wer sie aufgehoben hat
-#   <status>     aktiv, abgelaufen oder aufgehoben
+#   <revoked_at> wann sie aufgehoben wurde
+#   <length>     für wie lange sie verhängt wurde, oder das Wort für dauerhaft
+#   <status>     aktiv, abgelaufen oder aufgehoben, aus words unten
+#   <type_name>  Bann, IP-Bann, Stummschaltung, Kick oder Verwarnung, aus words.types unten
 
 commands:
   ban:
@@ -42,9 +45,28 @@ commands:
     success: '<green>* "<player>" wurde entstummt <dark_gray>(#<id>)</dark_gray></green>'
   history:
     usage: "<gray>» /history <player></gray>"
-    header: "<gray><player> <dark_gray>|</dark_gray> <count> Eintrag/Einträge</gray>"
-    empty: "<gray>  Keine Einträge für <player>.</gray>"
-    entry: "  <dark_gray>#<id></dark_gray> <white><type></white> <dark_gray>|</dark_gray> <gray><reason></gray> <dark_gray>|</dark_gray> <gray><operator>, <created></gray> <dark_gray>|</dark_gray> <status>"
+    # <count> ist die Anzahl der Einträge darunter.
+    header: "<gray>Verlauf von <white><player></white> <dark_gray>(<count>)</dark_gray></gray>"
+    empty: "<gray>* <white><player></white> hat keine Strafen.</gray>"
+    # Eine Zeile pro Bann, IP-Bann und Stummschaltung.
+    entry: " <dark_gray>#<id></dark_gray> <type_name> <dark_gray>·</dark_gray> <gray><reason></gray> <dark_gray>·</dark_gray> <status>"
+    # Eine Zeile pro Kick und Verwarnung. Die sind mit dem Moment vorbei, darum ohne Status.
+    entry-simple: " <dark_gray>#<id></dark_gray> <type_name> <dark_gray>·</dark_gray> <gray><reason></gray>"
+    # Erscheint beim Darüberfahren mit der Maus.
+    hover:
+      - "<type_name> <dark_gray>#<id></dark_gray>"
+      - "<gray>Grund: <white><reason></white></gray>"
+      - "<gray>Von: <white><operator></white></gray>"
+      - "<gray>Datum: <white><created></white></gray>"
+    # Kommt bei Banns, IP-Banns und Stummschaltungen dazu.
+    hover-duration:
+      - "<gray>Dauer: <white><length></white></gray>"
+      - "<gray>Endet: <white><expires></white></gray>"
+    # Kommt dazu, sobald die Strafe aufgehoben wurde.
+    hover-revoked:
+      - "<gray>Aufgehoben von: <white><revoked_by></white>, <revoked_at></gray>"
+    # Unter der Liste, wenn es ältere Einträge gibt. <limit> ist history-limit aus der config.yml.
+    more: "<dark_gray> Nur die letzten <limit> Einträge werden angezeigt.</dark_gray>"
 
 # Wörter, die in mehreren Nachrichten vorkommen.
 words:
@@ -60,9 +82,18 @@ words:
   # Geht an den Moderator nach einer lautlosen Strafe, damit er sieht, dass sie lautlos war.
   silent-notice: "<dark_gray>  (lautlos, nur für das Team sichtbar)</dark_gray>"
   default-reason: "Kein Grund angegeben"
+  # <status>: ob ein Bann oder eine Stummschaltung noch gilt.
   active: "<red>aktiv</red>"
   expired: "<gray>abgelaufen</gray>"
   revoked: "<green>aufgehoben</green>"
+
+  # <type_name>: jede Art von Strafe, wie sie in /history steht.
+  types:
+    ban: "<red>Bann</red>"
+    ip_ban: "<dark_red>IP-Bann</dark_red>"
+    mute: "<gold>Stummschaltung</gold>"
+    kick: "<yellow>Kick</yellow>"
+    warn: "<yellow>Verwarnung</yellow>"
 
 # Was ein bestrafter Spieler zu sehen bekommt. Jeder Eintrag ist eine Liste von Zeilen und wird
 # als ein Block gesendet, sodass diese bei Banns und Kicks als ganzer Trennungsbildschirm taugen.

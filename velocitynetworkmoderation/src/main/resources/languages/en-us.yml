@@ -13,7 +13,10 @@
 #   <expires>    when it runs out, or the permanent word
 #   <duration>   how long is left, or the permanent word
 #   <revoked_by> who lifted it
-#   <status>     active, expired or revoked
+#   <revoked_at> when it was lifted
+#   <length>     how long it was given for, or the permanent word
+#   <status>     active, expired or lifted, from words below
+#   <type_name>  ban, IP ban, mute, kick or warning, from words.types below
 
 commands:
   ban:
@@ -42,9 +45,28 @@ commands:
     success: '<green>* "<player>" was unmuted <dark_gray>(#<id>)</dark_gray></green>'
   history:
     usage: "<gray>» /history <player></gray>"
-    header: "<gray><player> <dark_gray>|</dark_gray> <count> entry/entries</gray>"
-    empty: "<gray>  No entries for <player>.</gray>"
-    entry: "  <dark_gray>#<id></dark_gray> <white><type></white> <dark_gray>|</dark_gray> <gray><reason></gray> <dark_gray>|</dark_gray> <gray><operator>, <created></gray> <dark_gray>|</dark_gray> <status>"
+    # <count> is the number of entries shown below it.
+    header: "<gray>History of <white><player></white> <dark_gray>(<count>)</dark_gray></gray>"
+    empty: "<gray>* <white><player></white> has no punishments.</gray>"
+    # One line per ban, IP ban and mute.
+    entry: " <dark_gray>#<id></dark_gray> <type_name> <dark_gray>·</dark_gray> <gray><reason></gray> <dark_gray>·</dark_gray> <status>"
+    # One line per kick and warning. These are over the moment they happen, so they have no status.
+    entry-simple: " <dark_gray>#<id></dark_gray> <type_name> <dark_gray>·</dark_gray> <gray><reason></gray>"
+    # Shown when hovering over an entry.
+    hover:
+      - "<type_name> <dark_gray>#<id></dark_gray>"
+      - "<gray>Reason: <white><reason></white></gray>"
+      - "<gray>By: <white><operator></white></gray>"
+      - "<gray>Date: <white><created></white></gray>"
+    # Added to the hover for bans, IP bans and mutes.
+    hover-duration:
+      - "<gray>Length: <white><length></white></gray>"
+      - "<gray>Ends: <white><expires></white></gray>"
+    # Added to the hover once it was lifted.
+    hover-revoked:
+      - "<gray>Lifted by: <white><revoked_by></white>, <revoked_at></gray>"
+    # Below the list when older entries exist. <limit> is history-limit from config.yml.
+    more: "<dark_gray> Only the latest <limit> entries are shown.</dark_gray>"
 
 # Words reused across messages.
 words:
@@ -60,9 +82,18 @@ words:
   # Shown to the moderator after a silent punishment, so they can tell it was silent.
   silent-notice: "<dark_gray>  (silent, only staff were told)</dark_gray>"
   default-reason: "No reason given"
+  # <status>: whether a ban or mute is still in force.
   active: "<red>active</red>"
   expired: "<gray>expired</gray>"
-  revoked: "<green>revoked</green>"
+  revoked: "<green>lifted</green>"
+
+  # <type_name>: each kind of punishment as shown in /history.
+  types:
+    ban: "<red>Ban</red>"
+    ip_ban: "<dark_red>IP ban</dark_red>"
+    mute: "<gold>Mute</gold>"
+    kick: "<yellow>Kick</yellow>"
+    warn: "<yellow>Warning</yellow>"
 
 # What a punished player sees. Each is a list of lines sent as one block, so these work as a
 # full disconnect screen for bans and kicks.

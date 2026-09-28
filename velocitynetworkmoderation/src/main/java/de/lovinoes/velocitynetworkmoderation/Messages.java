@@ -14,6 +14,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * Every piece of text this plugin shows comes from config, including the multi-line screens a
@@ -97,8 +98,30 @@ public final class Messages {
                         : DurationParser.describe(punishment.remainingMillis(now))),
                 Placeholder.unparsed("duration_phrase", durationPhrase(punishment, now)),
                 Placeholder.unparsed("revoked_by", nullSafe(punishment.revokedBy())),
-                Placeholder.unparsed("status", statusWord(punishment, now))
+                Placeholder.unparsed("revoked_at", punishment.revokedAt() > 0
+                        ? dateFormatter.format(Instant.ofEpochMilli(punishment.revokedAt()))
+                        : ""),
+                Placeholder.unparsed("length", punishment.isPermanent()
+                        ? permanentWord
+                        : DurationParser.describe(punishment.expiresAt() - punishment.createdAt())),
+                // Components, not text: these words carry their own colours in the language file.
+                Placeholder.component("status", ChatColorParser.parse(statusWord(punishment, now))),
+                Placeholder.component("type_name", ChatColorParser.parse(
+                        language.getString("words.types." + punishment.type().lowerName(),
+                                punishment.type().lowerName())))
         };
+    }
+
+    /**
+     * A block of lines like {@link #screen}, or nothing when the key is missing, an empty list or
+     * "". For optional parts, where showing the key's path would be wrong.
+     */
+    public Optional<Component> optionalScreen(String path, TagResolver... resolvers) {
+        Object raw = language.get(path);
+        boolean nothing = raw == null
+                || (raw instanceof List<?> list && list.isEmpty())
+                || (!(raw instanceof List<?>) && String.valueOf(raw).isBlank());
+        return nothing ? Optional.empty() : Optional.of(screen(path, resolvers));
     }
 
     /**
