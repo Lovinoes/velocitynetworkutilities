@@ -15,8 +15,9 @@ database:
     connection-timeout-ms: 8000
     idle-timeout-ms: 600000
     max-lifetime-ms: 1800000
+  # SQLite only: the database file, relative to this plugin's folder.
   sqlite:
-    file: plugins/VelocityNetworkUtilities/data.db
+    file: data.db
 
 messaging:
   provider: PLUGIN_MESSAGING # PLUGIN_MESSAGING | REDIS

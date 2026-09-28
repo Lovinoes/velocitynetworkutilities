@@ -33,7 +33,15 @@ public final class MojangLookupService {
                 .build();
     }
 
+    /** A Minecraft account as Mojang knows it: its UUID and its name, correctly capitalised. */
+    public record Profile(UUID uuid, String name) {
+    }
+
     public CompletableFuture<Optional<UUID>> lookupUuid(String username) {
+        return lookupProfile(username).thenApply(profile -> profile.map(Profile::uuid));
+    }
+
+    public CompletableFuture<Optional<Profile>> lookupProfile(String username) {
         // The name goes into the URL. Anything that cannot be a Minecraft name is not asked
         // about at all, so a typo cannot reach another endpoint or break the URL.
         if (username == null || !VALID_NAME.matcher(username).matches()) {
@@ -48,23 +56,24 @@ public final class MojangLookupService {
                         .build();
                 HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
                 if (response.statusCode() != 200) {
-                    return Optional.<UUID>empty();
+                    return Optional.<Profile>empty();
                 }
                 JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
-                String rawId = json.get("id").getAsString();
-                return Optional.of(parseUndashedUuid(rawId));
+                UUID uuid = parseUndashedUuid(json.get("id").getAsString());
+                String name = json.has("name") ? json.get("name").getAsString() : username;
+                return Optional.of(new Profile(uuid, name));
             } catch (IOException | InterruptedException e) {
                 if (e instanceof InterruptedException) {
                     Thread.currentThread().interrupt();
                 }
                 LOGGER.log(Level.WARNING, "Mojang UUID lookup failed for " + username, e);
-                return Optional.<UUID>empty();
+                return Optional.<Profile>empty();
             } catch (RuntimeException e) {
                 // Covers malformed/unexpected JSON in the response body (JsonSyntaxException,
                 // IllegalStateException from getAsJsonObject, missing "id" field, etc.) so an
                 // unusual API response degrades to "not found" instead of failing the future.
                 LOGGER.log(Level.WARNING, "Mojang UUID lookup returned an unexpected response for " + username, e);
-                return Optional.<UUID>empty();
+                return Optional.<Profile>empty();
             }
         }, executor);
     }

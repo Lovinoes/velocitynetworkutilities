@@ -41,6 +41,7 @@ public final class VelocityNetworkVanishPlugin {
     private final Logger logger;
     private final Path dataDirectory;
     private VanishBroadcastChannel broadcastChannel;
+    private VanishManager vanishManager;
 
     @Inject
     public VelocityNetworkVanishPlugin(ProxyServer proxyServer, Logger logger, @DataDirectory Path dataDirectory) {
@@ -73,7 +74,7 @@ public final class VelocityNetworkVanishPlugin {
                 new ChannelGuard(MinecraftChannelIdentifier.from(broadcastChannelName)));
 
         NetworkVanishDao vanishDao = new NetworkVanishDao(VelocityNetworkAPI.get().database(), table);
-        VanishManager vanishManager = new VanishManager(proxyServer, this, proxyServer.getEventManager(), vanishDao,
+        vanishManager = new VanishManager(proxyServer, this, proxyServer.getEventManager(), vanishDao,
                 broadcastChannel, seeVanishedPermission,
                 messages.getString("messages.fake-join", ""),
                 messages.getString("messages.fake-leave", ""),
@@ -82,6 +83,7 @@ public final class VelocityNetworkVanishPlugin {
                 ConfiguredSound.fromConfig(config, "sound.unvanish",
                         "minecraft:block.amethyst_block.chime", "MASTER", 0.35, 1.2));
         vanishManager.loadPersistedState();
+        vanishManager.start();
 
         proxyServer.getEventManager().register(this, new VanishListener(proxyServer, vanishManager, protectedCommands,
                 seeVanishedPermission, messages.getString("messages.target-not-found", "")));
@@ -107,6 +109,9 @@ public final class VelocityNetworkVanishPlugin {
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        if (vanishManager != null) {
+            vanishManager.stop();
+        }
         if (broadcastChannel != null) {
             broadcastChannel.stop();
         }

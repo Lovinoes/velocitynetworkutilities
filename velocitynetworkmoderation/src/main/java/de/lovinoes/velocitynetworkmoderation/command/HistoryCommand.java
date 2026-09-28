@@ -109,7 +109,7 @@ public final class HistoryCommand implements SimpleCommand {
 
     /** Looks the player up, then runs {@code action}. Every failure on the way is reported. */
     private void withPlayer(CommandSource source, String target, Consumer<PlayerRecord> action) {
-        PlayerCacheAPI.get().findByUsername(target).thenAccept(record -> {
+        PlayerCacheAPI.get().resolve(target).thenAccept(record -> {
             if (record.isEmpty()) {
                 source.sendMessage(messages.line("errors.player-not-found", Placeholder.unparsed("target", target)));
                 return;

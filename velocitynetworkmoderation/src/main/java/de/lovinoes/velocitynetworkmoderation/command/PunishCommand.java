@@ -210,12 +210,12 @@ public final class PunishCommand implements SimpleCommand {
     }
 
     /**
-     * An online player is authoritative; otherwise the cache, which falls back to Mojang for a
-     * name it has never seen. Punishing someone who has never joined is a real need: a moderator
-     * may be acting on a report before the player comes back.
+     * The cache, which falls back to Mojang for a name it has never seen. Punishing someone who
+     * has never joined is a real need: a moderator may be acting on a report before the player
+     * comes back.
      */
     private CompletableFuture<PlayerRecord> resolve(String name) {
-        return PlayerCacheAPI.get().findByUsername(name).thenApply(found -> found.orElse(null));
+        return PlayerCacheAPI.get().resolve(name).thenApply(found -> found.orElse(null));
     }
 
     /**

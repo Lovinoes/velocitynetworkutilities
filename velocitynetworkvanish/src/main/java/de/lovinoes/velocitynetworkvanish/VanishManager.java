@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.player.TabList;
 import com.velocitypowered.api.proxy.player.TabListEntry;
 import de.lovinoes.networkutilitiescommon.chat.ChatColorParser;
+import de.lovinoes.networkutilitiescommon.messaging.MessageListener;
 import de.lovinoes.networkutilitiescommon.vanish.NetworkVanishDao;
 import de.lovinoes.velocitynetworkutilities.api.VelocityNetworkAPI;
 import de.lovinoes.velocitynetworkvanish.event.PlayerVanishStateChangeEvent;
@@ -93,7 +94,7 @@ public final class VanishManager {
         VelocityNetworkAPI.get().setVanished(uuid, vanished);
         vanishDao.setVanished(uuid, vanished);
         syncTabListForAllViewers(player, vanished);
-        pushVanishUpdate(uuid, vanished);
+        pushVanishUpdate(uuid, vanished, player.getUsername());
         broadcastChannel.broadcastSnapshot(vanishedSnapshot());
 
         if (!silent) {
@@ -188,9 +189,58 @@ public final class VanishManager {
         lastKnownNames.put(player.getUniqueId(), player.getUsername());
     }
 
-    private void pushVanishUpdate(UUID uuid, boolean vanished) {
-        String payload = uuid + "|" + vanished;
+    /**
+     * Tells the other proxies, which keep their own list of who is vanished. Without it, two
+     * proxies sharing a backend send it snapshots that disagree, and the one that does not know
+     * reveals the player there. The name travels along because backends filter completions by
+     * name.
+     */
+    private void pushVanishUpdate(UUID uuid, boolean vanished, String name) {
+        String payload = uuid + "|" + vanished + "|" + name;
         VelocityNetworkAPI.get().messaging().publish(VANISH_UPDATE_TOPIC, payload.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private final MessageListener updateListener =
+            (topic, payload) -> onRemoteUpdate(new String(payload, StandardCharsets.UTF_8));
+
+    public void start() {
+        VelocityNetworkAPI.get().messaging().subscribe(VANISH_UPDATE_TOPIC, updateListener);
+    }
+
+    public void stop() {
+        VelocityNetworkAPI.get().messaging().unsubscribe(VANISH_UPDATE_TOPIC, updateListener);
+    }
+
+    /**
+     * Another proxy vanished or unvanished someone. Every proxy also hears its own updates back,
+     * and those change nothing here, which is exactly how they are told apart and ignored.
+     */
+    void onRemoteUpdate(String raw) {
+        String[] parts = raw.split("\\|", 3);
+        UUID uuid;
+        try {
+            uuid = UUID.fromString(parts[0].trim());
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+        if (parts.length < 2) {
+            return;
+        }
+        boolean vanished = Boolean.parseBoolean(parts[1].trim());
+        String name = parts.length > 2 ? parts[2].trim() : "";
+
+        boolean changed = vanished ? vanishedPlayers.add(uuid) : vanishedPlayers.remove(uuid);
+        if (!changed) {
+            return;
+        }
+        if (!vanished) {
+            lastKnownNames.remove(uuid);
+        } else if (!name.isEmpty()) {
+            lastKnownNames.put(uuid, name);
+        }
+        VelocityNetworkAPI.get().setVanished(uuid, vanished);
+        proxyServer.getPlayer(uuid).ifPresent(player -> syncTabListForAllViewers(player, vanished));
+        broadcastChannel.broadcastSnapshot(vanishedSnapshot());
     }
 
     /**

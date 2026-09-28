@@ -39,6 +39,30 @@ public final class PlayerCacheAPI {
         });
     }
 
+    /**
+     * Like {@link #findByUsername}, but also finds a real Minecraft account that has never been
+     * on this network, through Mojang. For acting on a player, such as punishing someone before
+     * they return: that player has no history here, so the record carries only their UUID and
+     * name, with every time left at 0.
+     *
+     * Not for showing information about a player, since a record like that has none to show.
+     */
+    public CompletableFuture<Optional<PlayerRecord>> resolve(String username) {
+        return dao.findByUsername(username).thenCompose(record -> {
+            if (record.isPresent()) {
+                return CompletableFuture.completedFuture(record);
+            }
+            return mojangLookupService.lookupProfile(username).thenCompose(profile -> {
+                if (profile.isEmpty()) {
+                    return CompletableFuture.completedFuture(Optional.<PlayerRecord>empty());
+                }
+                // Known under another name, if they renamed since they were last here.
+                return dao.findByUuid(profile.get().uuid()).thenApply(known -> known.or(() -> Optional.of(
+                        new PlayerRecord(profile.get().uuid(), profile.get().name(), 0, 0, 0))));
+            });
+        });
+    }
+
     public CompletableFuture<Void> recordLogin(UUID uuid, String username) {
         return dao.recordLogin(uuid, username, System.currentTimeMillis());
     }

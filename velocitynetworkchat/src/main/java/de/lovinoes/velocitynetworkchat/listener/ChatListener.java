@@ -204,16 +204,17 @@ public final class ChatListener {
      * message. Resolving placeholders in player input would let anyone print another player's
      * placeholder values just by typing them. It is skipped entirely when the format has no '%'.
      */
-    private CompletableFuture<String> format(Player sender, ChatChannel channel) {
-        String format = channel.format();
-        return placeholderResolver.needsResolving(format)
-                ? placeholderResolver.resolve(format, sender.getUniqueId())
-                : CompletableFuture.completedFuture(format);
+    private CompletableFuture<PlaceholderResolver.Resolved> format(Player sender, ChatChannel channel) {
+        return placeholderResolver.resolve(channel.format(), sender.getUniqueId());
     }
 
-    private void deliver(Player sender, ChatChannel channel, String format, Component message,
+    private void deliver(Player sender, ChatChannel channel, PlaceholderResolver.Resolved format, Component message,
                          List<Player> audience, Set<Player> mentioned) {
-        Component rendered = ChatColorParser.parse(format, placeholders(sender, channel, message));
+        TagResolver[] own = placeholders(sender, channel, message);
+        TagResolver[] all = new TagResolver[own.length + format.placeholders().length];
+        System.arraycopy(own, 0, all, 0, own.length);
+        System.arraycopy(format.placeholders(), 0, all, own.length, format.placeholders().length);
+        Component rendered = ChatColorParser.parse(format.format(), all);
         proxyServer.getConsoleCommandSource().sendMessage(rendered);
         for (Player recipient : audience) {
             recipient.sendMessage(rendered);

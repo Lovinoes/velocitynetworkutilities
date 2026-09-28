@@ -1,17 +1,26 @@
 package de.lovinoes.velocitynetworkchat;
 
+import de.lovinoes.networkutilitiescommon.chat.ChatColorParser;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.william278.papiproxybridge.api.PlaceholderAPI;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Resolves PlaceholderAPI placeholders (%player_name%, %vault_rank%, ...) in a format string by
  * asking the backend server through PAPIProxyBridge.
  *
- * Three things shape how this is used:
+ * Four things shape how this is used:
  *
  * 1. It is optional. PAPIProxyBridge is compileOnly, so if the plugin is not installed the API
  *    class simply is not there at runtime. Availability is probed once at startup by trying to
@@ -22,6 +31,10 @@ import java.util.concurrent.TimeUnit;
  *    for. A format with no PlaceholderAPI placeholders stays entirely synchronous.
  * 3. The API instance is created once and reused. createInstance() hands back a fresh object
  *    with its own cache, so building one per message would throw that cache away every time.
+ * 4. A value is never read as MiniMessage. Values can come from players (a nickname, a team
+ *    name), so each placeholder is resolved on its own and put back as a component that keeps
+ *    its colours but can never become a click, hover or insertion. Pasting the values into the
+ *    format instead would let a nickname carry a command for whoever clicks it.
  *
  * Only format strings from config are ever resolved, never a player's own message: running
  * placeholders over player input would let anyone print another player's placeholder values just
@@ -30,6 +43,17 @@ import java.util.concurrent.TimeUnit;
 public final class PlaceholderResolver {
 
     private static final long RESOLVE_TIMEOUT_SECONDS = 2;
+
+    /** A PlaceholderAPI placeholder: %something% with no spaces or tag brackets inside. */
+    private static final Pattern TOKEN = Pattern.compile("%[^%\\s<>]+%");
+
+    /** The format with each placeholder replaced by a tag, and the tags' values. */
+    public record Resolved(String format, TagResolver[] placeholders) {
+
+        static Resolved unchanged(String format) {
+            return new Resolved(format, new TagResolver[0]);
+        }
+    }
 
     private final Logger logger;
     private final Bridge bridge;
@@ -60,34 +84,74 @@ public final class PlaceholderResolver {
 
     /** True only when resolving is both possible and actually necessary for this text. */
     public boolean needsResolving(String text) {
-        return bridge != null && text.indexOf('%') >= 0;
+        return bridge != null && TOKEN.matcher(text).find();
     }
 
     /**
-     * Resolves placeholders for the given player. Never completes exceptionally: on timeout or
-     * any other failure the original text is returned so a chat message is still delivered.
+     * Resolves placeholders for the given player. Never completes exceptionally: a placeholder
+     * that fails or times out stays as written, so a chat message is still delivered.
      */
-    public CompletableFuture<String> resolve(String text, UUID player) {
-        if (!needsResolving(text)) {
-            return CompletableFuture.completedFuture(text);
+    public CompletableFuture<Resolved> resolve(String format, UUID player) {
+        if (!needsResolving(format)) {
+            return CompletableFuture.completedFuture(Resolved.unchanged(format));
         }
+        Map<String, CompletableFuture<String>> values = new LinkedHashMap<>();
+        Matcher matcher = TOKEN.matcher(format);
+        while (matcher.find()) {
+            values.computeIfAbsent(matcher.group(), token -> resolveOne(token, player));
+        }
+        return CompletableFuture.allOf(values.values().toArray(CompletableFuture[]::new))
+                // A timeout completes on the JDK's single shared delay thread; what follows
+                // delivers the message, which does not belong there.
+                .thenApplyAsync(ignored -> assemble(format, values));
+    }
+
+    private CompletableFuture<String> resolveOne(String token, UUID player) {
         try {
             // Capped: a backend that never answers must not hold this message, and with it every
             // later message from the same player, which waits its turn behind it.
-            return bridge.format(text, player)
-                    .completeOnTimeout(text, RESOLVE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            return bridge.format(token, player)
+                    .completeOnTimeout(token, RESOLVE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .exceptionally(throwable -> {
-                        logger.warn("Could not resolve PlaceholderAPI placeholders, sending the format unresolved.",
-                                throwable);
-                        return text;
+                        logger.warn("Could not resolve {}, leaving it as written.", token, throwable);
+                        return token;
                     })
-                    // A timeout completes on the JDK's single shared delay thread; what follows
-                    // delivers the message, which does not belong there.
-                    .thenApplyAsync(resolved -> resolved);
+                    .thenApply(value -> value == null ? token : value);
         } catch (RuntimeException | LinkageError e) {
-            logger.warn("PAPIProxyBridge failed while resolving placeholders, sending the format unresolved.", e);
-            return CompletableFuture.completedFuture(text);
+            logger.warn("PAPIProxyBridge failed while resolving {}, leaving it as written.", token, e);
+            return CompletableFuture.completedFuture(token);
         }
+    }
+
+    /**
+     * Each placeholder becomes a tag carrying its value as a component. One written inside
+     * another tag, such as the colour in {@code <color:%my_color%>}, cannot be a component, so
+     * its value goes in as text with everything that could end the tag taken out.
+     */
+    static Resolved assemble(String format, Map<String, CompletableFuture<String>> values) {
+        StringBuilder out = new StringBuilder(format.length());
+        List<TagResolver> placeholders = new ArrayList<>();
+        Matcher matcher = TOKEN.matcher(format);
+        int last = 0;
+        while (matcher.find()) {
+            out.append(format, last, matcher.start());
+            String value = values.get(matcher.group()).join();
+            if (insideTag(format, matcher.start())) {
+                out.append(value.replaceAll("[<>'\"\\\\]", ""));
+            } else {
+                String name = "papi_" + placeholders.size();
+                placeholders.add(Placeholder.component(name, ChatColorParser.parseUntrusted(value)));
+                out.append('<').append(name).append('>');
+            }
+            last = matcher.end();
+        }
+        out.append(format, last, format.length());
+        return new Resolved(out.toString(), placeholders.toArray(TagResolver[]::new));
+    }
+
+    /** Whether this position is between a tag's opening '<' and its closing '>'. */
+    private static boolean insideTag(String text, int position) {
+        return text.lastIndexOf('<', position) > text.lastIndexOf('>', position);
     }
 
     /**
@@ -96,7 +160,6 @@ public final class PlaceholderResolver {
      * NoClassDefFoundError just by loading it on a proxy without the bridge.
      */
     private static final class Bridge {
-
         private final PlaceholderAPI api = PlaceholderAPI.createInstance();
 
         CompletableFuture<String> format(String text, UUID player) {

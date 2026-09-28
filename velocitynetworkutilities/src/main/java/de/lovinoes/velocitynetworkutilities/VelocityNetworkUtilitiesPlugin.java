@@ -17,6 +17,8 @@ import de.lovinoes.velocitynetworkutilities.api.VelocityNetworkAPI;
 import de.lovinoes.velocitynetworkutilities.messaging.PluginMessagingProvider;
 import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Plugin(
@@ -48,6 +50,7 @@ public final class VelocityNetworkUtilitiesPlugin {
     public void onProxyInitialize(ProxyInitializeEvent event) {
         YamlConfig config = YamlConfig.load(dataDirectory, "config.yml", getClass().getClassLoader());
 
+        moveLegacySqliteFile(config);
         this.databaseManager = new DatabaseManager(config, dataDirectory);
         logger.info("Database pool initialized ({} backend)", databaseManager.type());
 
@@ -78,6 +81,38 @@ public final class VelocityNetworkUtilitiesPlugin {
             databaseManager.close();
         }
         logger.info("VelocityNetworkUtilities shut down cleanly.");
+    }
+
+    /**
+     * The old default, "plugins/VelocityNetworkUtilities/data.db", was resolved inside this
+     * plugin's folder and so ended up nested a folder too deep. The default is now "data.db". A
+     * database still at the old place is moved to the configured one before it is opened, so
+     * nobody starts over with an empty database. It is never moved over an existing file.
+     */
+    private void moveLegacySqliteFile(YamlConfig config) {
+        if (!"SQLITE".equalsIgnoreCase(config.getString("database.type", "").strip())) {
+            return;
+        }
+        Path target = dataDirectory.resolve(config.getString("database.sqlite.file", "data.db"))
+                .toAbsolutePath().normalize();
+        Path legacy = dataDirectory.resolve("plugins/VelocityNetworkUtilities/data.db").toAbsolutePath().normalize();
+        if (target.equals(legacy) || Files.exists(target) || !Files.exists(legacy)) {
+            return;
+        }
+        try {
+            Files.createDirectories(target.getParent());
+            // SQLite may keep its journal beside the file; it belongs with the database.
+            for (String suffix : new String[] {"", "-wal", "-shm", "-journal"}) {
+                Path from = legacy.resolveSibling(legacy.getFileName() + suffix);
+                if (Files.exists(from)) {
+                    Files.move(from, target.resolveSibling(target.getFileName() + suffix));
+                }
+            }
+            logger.info("Moved the SQLite database from {} to {}.", legacy, target);
+        } catch (IOException e) {
+            logger.error("Could not move the SQLite database from {} to {}. Move it by hand, or set "
+                    + "database.sqlite.file back to plugins/VelocityNetworkUtilities/data.db.", legacy, target, e);
+        }
     }
 
     public VelocityNetworkAPI networkAPI() {

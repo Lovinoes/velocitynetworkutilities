@@ -77,7 +77,7 @@ public final class RevokeCommand implements SimpleCommand {
             return;
         }
 
-        PlayerCacheAPI.get().findByUsername(target).thenAccept(record -> {
+        PlayerCacheAPI.get().resolve(target).thenAccept(record -> {
             if (record.isEmpty()) {
                 invocation.source().sendMessage(messages.line("errors.player-not-found",
                         Placeholder.unparsed("target", target)));
