@@ -133,6 +133,31 @@ public final class PunishmentDao {
         });
     }
 
+    /** Every punishment of this type in force against this player, newest first. */
+    public CompletableFuture<List<Punishment>> findAllInForce(PunishmentType type, UUID victim, long now) {
+        return databaseManager.execute(connection -> {
+            String sql = "SELECT * FROM " + punishmentsTable
+                    + " WHERE type = ? AND victim_uuid = ? AND active = ? ORDER BY created_at DESC, id DESC";
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, type.name());
+                statement.setString(2, victim.toString());
+                statement.setBoolean(3, true);
+                List<Punishment> inForce = new ArrayList<>();
+                try (ResultSet results = statement.executeQuery()) {
+                    while (results.next()) {
+                        Punishment punishment = read(results);
+                        if (!punishment.isExpired(now)) {
+                            inForce.add(punishment);
+                        }
+                    }
+                }
+                return inForce;
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     /** The IP ban currently in force against this address, if any. */
     public CompletableFuture<Optional<Punishment>> findActiveIpBan(String address, long now) {
         return databaseManager.execute(connection -> {
@@ -184,43 +209,71 @@ public final class PunishmentDao {
     }
 
     /**
-     * Lifts the punishment of this type in force against a player.
-     *
-     * @return the punishment that was lifted, empty if there was nothing to lift.
+     * Lifts EVERY punishment of this type in force against a player, and reports the newest.
+     * Lifting only the newest would leave an older one in force: a player muted twice would stay
+     * muted after /unmute, with nothing telling staff why.
      */
     public CompletableFuture<Optional<Punishment>> revoke(PunishmentType type, UUID victim, String operator, long now) {
-        return findActive(type, victim, now).thenCompose(found ->
-                found.isEmpty()
-                        ? CompletableFuture.completedFuture(Optional.<Punishment>empty())
-                        : revokeById(found.get(), operator, now));
+        return revokeAll("type = ? AND victim_uuid = ?",
+                statement -> {
+                    statement.setString(1, type.name());
+                    statement.setString(2, victim.toString());
+                }, operator, now);
     }
 
+    /** Lifts every IP ban in force on this address, and reports the newest. */
     public CompletableFuture<Optional<Punishment>> revokeIpBan(String address, String operator, long now) {
-        return findActiveIpBan(address, now).thenCompose(found ->
-                found.isEmpty()
-                        ? CompletableFuture.completedFuture(Optional.<Punishment>empty())
-                        : revokeById(found.get(), operator, now));
+        return revokeAll("type = ? AND victim_address = ?",
+                statement -> {
+                    statement.setString(1, PunishmentType.IP_BAN.name());
+                    statement.setString(2, address);
+                }, operator, now);
     }
 
-    private CompletableFuture<Optional<Punishment>> revokeById(Punishment punishment, String operator, long now) {
+    private interface Binder {
+        void bind(PreparedStatement statement) throws SQLException;
+    }
+
+    /**
+     * @param where the rows to consider, filled in by {@code binder} from parameter 1. Only rows
+     *              still in force are lifted: one that already ran out keeps reading as expired.
+     */
+    private CompletableFuture<Optional<Punishment>> revokeAll(String where, Binder binder, String operator, long now) {
         return databaseManager.execute(connection -> {
-            String sql = "UPDATE " + punishmentsTable
+            String select = "SELECT * FROM " + punishmentsTable + " WHERE " + where
+                    + " AND active = ? ORDER BY created_at DESC, id DESC";
+            String update = "UPDATE " + punishmentsTable
                     + " SET active = ?, revoked_by = ?, revoked_at = ? WHERE id = ? AND active = ?";
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setBoolean(1, false);
-                statement.setString(2, operator);
-                statement.setLong(3, now);
-                statement.setLong(4, punishment.id());
-                // Only lift a row that is still active, so two moderators unbanning at the same
-                // moment cannot both be told they were the one who did it.
-                statement.setBoolean(5, true);
-                if (statement.executeUpdate() == 0) {
-                    return Optional.<Punishment>empty();
+            try (PreparedStatement query = connection.prepareStatement(select);
+                 PreparedStatement lift = connection.prepareStatement(update)) {
+                binder.bind(query);
+                query.setBoolean(3, true);
+                List<Punishment> inForce = new ArrayList<>();
+                try (ResultSet results = query.executeQuery()) {
+                    while (results.next()) {
+                        Punishment punishment = read(results);
+                        if (!punishment.isExpired(now)) {
+                            inForce.add(punishment);
+                        }
+                    }
                 }
-                return Optional.of(new Punishment(punishment.id(), punishment.type(), punishment.victimUuid(),
-                        punishment.victimName(), punishment.victimAddress(), punishment.operatorUuid(),
-                        punishment.operatorName(), punishment.reason(), punishment.createdAt(),
-                        punishment.expiresAt(), false, operator, now));
+                Punishment newestLifted = null;
+                for (Punishment punishment : inForce) {
+                    lift.setBoolean(1, false);
+                    lift.setString(2, operator);
+                    lift.setLong(3, now);
+                    lift.setLong(4, punishment.id());
+                    // Only a row that is still active, so two moderators lifting at the same
+                    // moment cannot both be told they were the one who did it.
+                    lift.setBoolean(5, true);
+                    if (lift.executeUpdate() > 0 && newestLifted == null) {
+                        newestLifted = new Punishment(punishment.id(), punishment.type(), punishment.victimUuid(),
+                                punishment.victimName(), punishment.victimAddress(), punishment.operatorUuid(),
+                                punishment.operatorName(), punishment.reason(), punishment.createdAt(),
+                                punishment.expiresAt(), false, operator, now);
+                    }
+                }
+                return Optional.ofNullable(newestLifted);
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }

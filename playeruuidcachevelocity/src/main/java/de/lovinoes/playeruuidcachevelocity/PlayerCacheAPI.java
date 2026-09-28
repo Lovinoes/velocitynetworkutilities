@@ -6,7 +6,8 @@ import java.util.concurrent.CompletableFuture;
 
 public final class PlayerCacheAPI {
 
-    private static PlayerCacheAPI instance;
+    // Volatile: set once on startup, then read from every thread the other plugins run on.
+    private static volatile PlayerCacheAPI instance;
 
     private final PlayerCacheDao dao;
     private final MojangLookupService mojangLookupService;

@@ -256,6 +256,11 @@ public final class VanishManager {
         }
     }
 
+    private static boolean onSameServer(Player one, Player other) {
+        return one.getCurrentServer().isPresent() && other.getCurrentServer().isPresent()
+                && one.getCurrentServer().get().getServerInfo().equals(other.getCurrentServer().get().getServerInfo());
+    }
+
     private void syncTabListForAllViewers(Player target, boolean vanished) {
         for (Player viewer : proxyServer.getAllPlayers()) {
             if (viewer.getUniqueId().equals(target.getUniqueId())) {
@@ -269,12 +274,15 @@ public final class VanishManager {
                 if (tabList.getEntry(target.getUniqueId()).isPresent()) {
                     tabList.removeEntry(target.getUniqueId());
                 }
-            } else if (tabList.getEntry(target.getUniqueId()).isEmpty()) {
+            } else if (onSameServer(viewer, target) && tabList.getEntry(target.getUniqueId()).isEmpty()) {
+                // Only for viewers on the same server: a tab list shows the players of its own
+                // server, and adding the entry everywhere would put them in every tab list on
+                // the network. Their own server usually re-adds it first when it shows them.
                 tabList.addEntry(TabListEntry.builder()
                         .tabList(tabList)
                         .profile(target.getGameProfile())
                         .displayName(Component.text(target.getUsername()))
-                        .latency((int) viewer.getPing())
+                        .latency((int) target.getPing())
                         .gameMode(0)
                         .build());
             }

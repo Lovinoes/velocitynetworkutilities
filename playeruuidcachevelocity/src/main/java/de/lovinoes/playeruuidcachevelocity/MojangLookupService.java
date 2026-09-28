@@ -19,6 +19,7 @@ public final class MojangLookupService {
 
     private static final System.Logger LOGGER = System.getLogger(MojangLookupService.class.getName());
     private static final String LOOKUP_URL = "https://api.mojang.com/users/profiles/minecraft/";
+    private static final java.util.regex.Pattern VALID_NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_]{1,16}");
 
     private final HttpClient httpClient;
     private final Executor executor;
@@ -33,6 +34,11 @@ public final class MojangLookupService {
     }
 
     public CompletableFuture<Optional<UUID>> lookupUuid(String username) {
+        // The name goes into the URL. Anything that cannot be a Minecraft name is not asked
+        // about at all, so a typo cannot reach another endpoint or break the URL.
+        if (username == null || !VALID_NAME.matcher(username).matches()) {
+            return CompletableFuture.completedFuture(Optional.empty());
+        }
         return CompletableFuture.supplyAsync(() -> {
             try {
                 HttpRequest request = HttpRequest.newBuilder()

@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Resolves PlaceholderAPI placeholders (%player_name%, %vault_rank%, ...) in a format string by
@@ -27,6 +28,8 @@ import java.util.concurrent.CompletableFuture;
  * by typing them in chat.
  */
 public final class PlaceholderResolver {
+
+    private static final long RESOLVE_TIMEOUT_SECONDS = 2;
 
     private final Logger logger;
     private final Bridge bridge;
@@ -69,12 +72,18 @@ public final class PlaceholderResolver {
             return CompletableFuture.completedFuture(text);
         }
         try {
+            // Capped: a backend that never answers must not hold this message, and with it every
+            // later message from the same player, which waits its turn behind it.
             return bridge.format(text, player)
+                    .completeOnTimeout(text, RESOLVE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .exceptionally(throwable -> {
                         logger.warn("Could not resolve PlaceholderAPI placeholders, sending the format unresolved.",
                                 throwable);
                         return text;
-                    });
+                    })
+                    // A timeout completes on the JDK's single shared delay thread; what follows
+                    // delivers the message, which does not belong there.
+                    .thenApplyAsync(resolved -> resolved);
         } catch (RuntimeException | LinkageError e) {
             logger.warn("PAPIProxyBridge failed while resolving placeholders, sending the format unresolved.", e);
             return CompletableFuture.completedFuture(text);

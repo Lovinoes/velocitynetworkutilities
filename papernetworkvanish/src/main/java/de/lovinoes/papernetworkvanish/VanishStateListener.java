@@ -69,11 +69,19 @@ public final class VanishStateListener implements Listener, PluginMessageListene
             return;
         }
 
+        // Only players whose state changed are acted on. The proxy resends the full snapshot
+        // whenever anyone switches server, and re-hiding everyone and firing the event again
+        // each time would tell other plugins that vanish changed when nothing did. A player
+        // joining is handled by onPlayerJoin, so nobody is missed.
         Set<UUID> noLongerVanished = new HashSet<>(vanishedPlayers.keySet());
         noLongerVanished.removeAll(snapshot.keySet());
+        Set<UUID> newlyVanished = new HashSet<>(snapshot.keySet());
+        newlyVanished.removeAll(vanishedPlayers.keySet());
 
-        vanishedPlayers.clear();
+        // Updated in place rather than cleared and refilled, so a completion filtered at this
+        // very moment never sees an empty list and lets a vanished name through.
         vanishedPlayers.putAll(snapshot);
+        vanishedPlayers.keySet().retainAll(snapshot.keySet());
 
         // Bukkit's visibility API is main-thread only; a plugin message arrives on a netty
         // thread, so hop back onto the main thread before touching any of it.
@@ -85,7 +93,7 @@ public final class VanishStateListener implements Listener, PluginMessageListene
                     Bukkit.getPluginManager().callEvent(new PlayerVanishStateChangeEvent(target, false));
                 }
             }
-            for (UUID uuid : snapshot.keySet()) {
+            for (UUID uuid : newlyVanished) {
                 Player target = Bukkit.getPlayer(uuid);
                 if (target != null) {
                     applyVisibility(target, true);

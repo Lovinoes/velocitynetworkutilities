@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 public final class DatabaseManager implements AutoCloseable {
@@ -52,16 +53,15 @@ public final class DatabaseManager implements AutoCloseable {
 
         switch (type) {
             case MARIADB, MYSQL -> {
-                String driverClass = type == DatabaseType.MARIADB
-                        ? "org.mariadb.jdbc.Driver"
-                        : "com.mysql.cj.jdbc.Driver";
+                // Only the MariaDB driver is bundled, and it talks to MySQL servers too. Asking
+                // for MySQL's own driver would fail with ClassNotFoundException and stop the plugin.
                 String host = config.getString(configRoot + ".host", "127.0.0.1");
                 int port = config.getInt(configRoot + ".port", 3306);
                 String name = config.getString(configRoot + ".name", "velocity_network");
                 String parameters = config.getString(configRoot + ".parameters", "");
-                String scheme = type == DatabaseType.MARIADB ? "mariadb" : "mysql";
-                hikariConfig.setDriverClassName(driverClass);
-                hikariConfig.setJdbcUrl("jdbc:" + scheme + "://" + host + ":" + port + "/" + name + "?" + parameters);
+                hikariConfig.setDriverClassName("org.mariadb.jdbc.Driver");
+                hikariConfig.setJdbcUrl("jdbc:mariadb://" + host + ":" + port + "/" + name
+                        + (parameters.isBlank() ? "" : "?" + parameters));
                 hikariConfig.setUsername(config.getString(configRoot + ".username", "root"));
                 hikariConfig.setPassword(config.getString(configRoot + ".password", ""));
             }
@@ -112,9 +112,22 @@ public final class DatabaseManager implements AutoCloseable {
         });
     }
 
+    /**
+     * Lets queued work finish before the connections close, so a write made just before shutdown,
+     * such as a punishment, is not lost. Gives up after 10 seconds rather than hang the shutdown.
+     */
     @Override
     public void close() {
         executor.shutdown();
+        try {
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                LOGGER.log(Level.WARNING, "Database work was still running after 10 seconds; closing anyway.");
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
         dataSource.close();
     }
 }

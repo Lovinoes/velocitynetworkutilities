@@ -29,7 +29,6 @@ import de.lovinoes.networkutilitiescommon.chat.ChatSettingsDao;
 import de.lovinoes.networkutilitiescommon.config.Language;
 import de.lovinoes.networkutilitiescommon.config.YamlConfig;
 import de.lovinoes.networkutilitiescommon.sound.ConfiguredSound;
-import de.lovinoes.networkutilitiescommon.vanish.VanishPermissions;
 import de.lovinoes.velocitynetworkutilities.api.VelocityNetworkAPI;
 import org.slf4j.Logger;
 
@@ -40,6 +39,8 @@ import java.util.List;
         id = "velocitynetworkchat",
         name = "VelocityNetworkChat",
         version = "1.0.0",
+        description = "Network chat: channels, mentions, private messages and item showcase.",
+        url = "https://lovinoes.de",
         authors = {"Lovinoes"},
         dependencies = {
                 @Dependency(id = "velocitynetworkutilities"),
@@ -70,7 +71,7 @@ public final class VelocityNetworkChatPlugin {
         String vaultFallback = config.getString("vault.prefix-placeholder-fallback", "");
         VaultDataCache vaultDataCache = new VaultDataCache(VelocityNetworkAPI.get().vaultCache(), vaultFallback);
         String colorPermission = config.getString("chat.color-permission", "velocitynetworkchat.color");
-        String seeVanishedPermission = VanishPermissions.SEE_VANISHED;
+        String seeVanishedPermission = VelocityNetworkAPI.get().seeVanishedPermission();
 
         // The bridge is also the channel's only listener: it answers nothing a client sends on it
         // and passes nothing through, which is what ChannelGuard does for the other channels.
@@ -186,7 +187,7 @@ public final class VelocityNetworkChatPlugin {
         commandManager.register(replyMeta, new ReplyCommand(privateMessageManager, messagePermission, messages));
 
         proxyServer.getEventManager().register(this, new SessionCleanupListener(channelManager, privateMessageManager,
-                showcaseService, senderQueue, antiSpam));
+                showcaseService, senderQueue, antiSpam, vaultDataCache));
 
         logger.info("VelocityNetworkChat initialized with {} channels.", channelManager.channels().size());
     }

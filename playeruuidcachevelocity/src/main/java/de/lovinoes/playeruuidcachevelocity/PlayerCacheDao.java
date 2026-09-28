@@ -51,7 +51,7 @@ public final class PlayerCacheDao {
 
     public CompletableFuture<Optional<PlayerRecord>> findByUsername(String username) {
         return databaseManager.execute(connection -> {
-            String sql = "SELECT uuid, username, first_join, last_login, last_logout FROM " + table + " WHERE username = ? ORDER BY last_login DESC LIMIT 1";
+            String sql = "SELECT uuid, username, first_join, last_login, last_logout FROM " + table + " WHERE LOWER(username) = LOWER(?) ORDER BY last_login DESC LIMIT 1";
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, username);
                 return mapSingle(statement);

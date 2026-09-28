@@ -23,6 +23,8 @@ import java.nio.file.Path;
         id = "velocitynetworkutilities",
         name = "VelocityNetworkUtilities",
         version = "1.0.0",
+        description = "Shared database and messaging for the network plugins.",
+        url = "https://lovinoes.de",
         authors = {"Lovinoes"}
 )
 public final class VelocityNetworkUtilitiesPlugin {
@@ -63,7 +65,11 @@ public final class VelocityNetworkUtilitiesPlugin {
         logger.info("VelocityNetworkUtilities core initialized.");
     }
 
-    @Subscribe
+    /**
+     * Last of all shutdown handlers: the other plugins save and unsubscribe in theirs, and need
+     * the database and messaging still open while they do.
+     */
+    @Subscribe(priority = Short.MIN_VALUE)
     public void onProxyShutdown(ProxyShutdownEvent event) {
         if (messagingProvider != null) {
             messagingProvider.stop();

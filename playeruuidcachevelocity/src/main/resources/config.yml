@@ -3,6 +3,6 @@
 table:
   name: uuid_cache
 
+# Asked when a name is not in the cache, to find a player who has changed their name since.
 mojang:
   lookup-timeout-ms: 5000
-  cache-lookup-failures: true

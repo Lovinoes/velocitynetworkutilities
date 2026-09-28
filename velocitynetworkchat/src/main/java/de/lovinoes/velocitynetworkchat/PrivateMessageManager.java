@@ -100,7 +100,7 @@ public final class PrivateMessageManager {
             return;
         }
         Component messageComponent = sender.hasPermission(colorPermission)
-                ? ChatColorParser.parse(message)
+                ? ChatColorParser.parseUntrusted(message)
                 : ChatColorParser.plain(message);
 
         senderQueue.submit(sender.getUniqueId(), () -> {

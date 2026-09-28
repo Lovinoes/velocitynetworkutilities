@@ -1,9 +1,0 @@
-{
-  "id": "velocitynetworkutilities",
-  "name": "VelocityNetworkUtilities",
-  "version": "1.0.0",
-  "description": "Shared core, database pool and messaging bridge for the Lovinoes network utilities.",
-  "url": "https://lovinoes.de",
-  "authors": ["Lovinoes"],
-  "main": "de.lovinoes.velocitynetworkutilities.VelocityNetworkUtilitiesPlugin"
-}

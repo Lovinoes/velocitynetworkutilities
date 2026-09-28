@@ -15,7 +15,6 @@ import de.lovinoes.velocitynetworkchat.VaultDataCache;
 import de.lovinoes.velocitynetworkchat.backend.BackendBridge;
 import de.lovinoes.velocitynetworkchat.showcase.ShowcaseService;
 import de.lovinoes.networkutilitiescommon.chat.ChatColorParser;
-import de.lovinoes.networkutilitiescommon.vanish.VanishPermissions;
 import de.lovinoes.velocitynetworkutilities.api.VelocityNetworkAPI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -131,7 +130,7 @@ public final class ChatListener {
         }
 
         Component messageComponent = sender.hasPermission(colorPermission)
-                ? ChatColorParser.parse(message)
+                ? ChatColorParser.parseUntrusted(message)
                 : ChatColorParser.plain(message);
 
         senderQueue.submit(sender.getUniqueId(), () -> process(sender, channel, messageComponent));
@@ -232,8 +231,9 @@ public final class ChatListener {
                 Placeholder.unparsed("server", server),
                 Placeholder.unparsed("channel", channel.displayName()),
                 Placeholder.unparsed("channel_key", channel.key()),
-                Placeholder.unparsed("vault_prefix", vaultDataCache.getPrefix(sender.getUniqueId())),
-                Placeholder.unparsed("vault_suffix", vaultDataCache.getSuffix(sender.getUniqueId())),
+                // Components, not text: prefixes come from the permission plugin with their own colours.
+                Placeholder.component("vault_prefix", ChatColorParser.parse(vaultDataCache.getPrefix(sender.getUniqueId()))),
+                Placeholder.component("vault_suffix", ChatColorParser.parse(vaultDataCache.getSuffix(sender.getUniqueId()))),
                 Placeholder.unparsed("vault_group", vaultDataCache.getGroup(sender.getUniqueId()))
         };
     }
@@ -254,7 +254,7 @@ public final class ChatListener {
             return false;
         }
         return !VelocityNetworkAPI.get().isVanished(sender.getUniqueId())
-                || recipient.hasPermission(VanishPermissions.SEE_VANISHED);
+                || recipient.hasPermission(VelocityNetworkAPI.get().seeVanishedPermission());
     }
 
     private boolean isOnSameServer(Player sender, Player recipient) {

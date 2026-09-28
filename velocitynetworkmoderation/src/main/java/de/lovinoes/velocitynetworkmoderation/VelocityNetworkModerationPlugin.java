@@ -12,7 +12,6 @@ import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import de.lovinoes.networkutilitiescommon.config.Language;
 import de.lovinoes.networkutilitiescommon.config.YamlConfig;
-import de.lovinoes.networkutilitiescommon.vanish.VanishPermissions;
 import de.lovinoes.velocitynetworkmoderation.command.HistoryCommand;
 import de.lovinoes.velocitynetworkmoderation.command.PunishCommand;
 import de.lovinoes.velocitynetworkmoderation.command.RevokeCommand;
@@ -41,6 +40,8 @@ import java.util.concurrent.TimeUnit;
         id = "velocitynetworkmoderation",
         name = "VelocityNetworkModeration",
         version = "1.0.0",
+        description = "Bans, mutes, kicks, warnings, history and chat filter for the network.",
+        url = "https://lovinoes.de",
         authors = {"Lovinoes"},
         dependencies = {
                 @Dependency(id = "velocitynetworkutilities"),
@@ -199,7 +200,7 @@ public final class VelocityNetworkModerationPlugin {
 
     private void registerCommands(YamlConfig config, Messages messages) {
         CommandManager commandManager = proxyServer.getCommandManager();
-        String seeVanished = VanishPermissions.SEE_VANISHED;
+        String seeVanished = VelocityNetworkAPI.get().seeVanishedPermission();
         String broadcastPermission = config.getString("permissions.see-broadcasts", "");
         // Clamped: a negative length would make substring throw, and a zero one would store
         // every reason as empty. Neither is what anybody typing a number here meant.

@@ -83,10 +83,16 @@ public final class RevokeCommand implements SimpleCommand {
                         Placeholder.unparsed("target", target)));
                 return;
             }
+            // An IP ban placed on this player records them, so it is found through them even if
+            // their address has changed since. Only one placed on a bare address needs the
+            // address, and the last one they were seen on is the best guess for that.
             CompletableFuture<Optional<Punishment>> lifting = type == PunishmentType.IP_BAN
-                    ? punishments.dao().lastAddress(record.get().uuid()).thenCompose(address -> address
-                            .map(value -> punishments.revokeIpBan(value, invocation.source()))
-                            .orElseGet(() -> CompletableFuture.completedFuture(Optional.empty())))
+                    ? punishments.revoke(PunishmentType.IP_BAN, record.get().uuid(), invocation.source())
+                            .thenCompose(byPlayer -> byPlayer.isPresent()
+                                    ? CompletableFuture.completedFuture(byPlayer)
+                                    : punishments.dao().lastAddress(record.get().uuid()).thenCompose(address -> address
+                                            .map(value -> punishments.revokeIpBan(value, invocation.source()))
+                                            .orElseGet(() -> CompletableFuture.completedFuture(Optional.empty()))))
                     : punishments.revoke(type, record.get().uuid(), invocation.source());
 
             lifting.thenAccept(lifted -> report(invocation, lifted, record.get().username(), finalSilent))

@@ -20,6 +20,8 @@ import java.util.concurrent.Executors;
         id = "playeruuidcachevelocity",
         name = "PlayerUUIDCacheVelocity",
         version = "1.0.0",
+        description = "Player name, UUID and session cache for the network.",
+        url = "https://lovinoes.de",
         authors = {"Lovinoes"},
         dependencies = {@Dependency(id = "velocitynetworkutilities")}
 )
@@ -45,7 +47,7 @@ public final class PlayerUUIDCacheVelocityPlugin {
     public void onProxyInitialize(ProxyInitializeEvent event) {
         YamlConfig config = YamlConfig.load(dataDirectory, "config.yml", getClass().getClassLoader());
 
-        String table = config.getString("table.name", "player_uuid_cache");
+        String table = config.getString("table.name", "uuid_cache");
         long lookupTimeout = config.getLong("mojang.lookup-timeout-ms", 5000);
 
         PlayerCacheDao dao = new PlayerCacheDao(VelocityNetworkAPI.get().database(), table);

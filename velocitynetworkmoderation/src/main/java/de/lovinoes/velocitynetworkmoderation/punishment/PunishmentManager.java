@@ -93,11 +93,24 @@ public final class PunishmentManager {
 
         return dao.insert(punishment).thenApply(stored -> {
             if (stored.type() == PunishmentType.MUTE && victimUuid != null) {
-                activeMutes.put(victimUuid, stored);
+                // Keep whichever mute lasts longer: a short mute on top of a permanent one must
+                // not end the permanent one when it runs out. Only for online players: the
+                // cache is theirs, and an offline player's mute is loaded when they log in.
+                if (proxyServer.getPlayer(victimUuid).isPresent()) {
+                    activeMutes.merge(victimUuid, stored, PunishmentManager::longerLasting);
+                }
                 publishMuteChange(victimUuid);
             }
             return stored;
         });
+    }
+
+    private static Punishment longerLasting(Punishment one, Punishment other) {
+        return endOf(one) >= endOf(other) ? one : other;
+    }
+
+    private static long endOf(Punishment punishment) {
+        return punishment.isPermanent() ? Long.MAX_VALUE : punishment.expiresAt();
     }
 
     /**
@@ -154,8 +167,10 @@ public final class PunishmentManager {
 
     /** Loads a player's mute into memory. Called during login, where a query is already due. */
     public CompletableFuture<Void> loadMute(UUID victim) {
-        return dao.findActive(PunishmentType.MUTE, victim, System.currentTimeMillis())
-                .thenAccept(found -> found.ifPresentOrElse(
+        // The longest-lasting mute in force, not the newest: that is the one that decides when
+        // the player may talk again.
+        return dao.findAllInForce(PunishmentType.MUTE, victim, System.currentTimeMillis())
+                .thenAccept(found -> found.stream().reduce(PunishmentManager::longerLasting).ifPresentOrElse(
                         mute -> activeMutes.put(victim, mute),
                         () -> activeMutes.remove(victim)));
     }

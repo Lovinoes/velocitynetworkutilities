@@ -2,6 +2,7 @@ package de.lovinoes.velocitynetworkutilities.api;
 
 import de.lovinoes.networkutilitiescommon.database.DatabaseManager;
 import de.lovinoes.networkutilitiescommon.messaging.NetworkMessagingProvider;
+import de.lovinoes.networkutilitiescommon.vanish.VanishPermissions;
 import de.lovinoes.networkutilitiescommon.vault.VaultCacheDao;
 
 import java.util.Set;
@@ -13,12 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class VelocityNetworkAPI {
 
-    private static VelocityNetworkAPI instance;
+    // Volatile: set once on startup, then read from every thread the other plugins run on.
+    private static volatile VelocityNetworkAPI instance;
 
     private final DatabaseManager databaseManager;
     private final NetworkMessagingProvider messagingProvider;
     private final VaultCacheDao vaultCacheDao;
     private final Set<UUID> vanishedPlayers = ConcurrentHashMap.newKeySet();
+    private volatile String seeVanishedPermission = VanishPermissions.SEE_VANISHED;
 
     public VelocityNetworkAPI(DatabaseManager databaseManager, NetworkMessagingProvider messagingProvider, VaultCacheDao vaultCacheDao) {
         this.databaseManager = databaseManager;
@@ -44,6 +47,21 @@ public final class VelocityNetworkAPI {
 
     public VaultCacheDao vaultCache() {
         return vaultCacheDao;
+    }
+
+    /**
+     * Who may see vanished players, as configured in VelocityNetworkVanish. Every plugin reads it
+     * from here so that changing it there changes it everywhere; without VelocityNetworkVanish
+     * it stays the default.
+     */
+    public String seeVanishedPermission() {
+        return seeVanishedPermission;
+    }
+
+    public void setSeeVanishedPermission(String permission) {
+        if (permission != null && !permission.isBlank()) {
+            this.seeVanishedPermission = permission.strip();
+        }
     }
 
     public boolean isVanished(UUID playerId) {

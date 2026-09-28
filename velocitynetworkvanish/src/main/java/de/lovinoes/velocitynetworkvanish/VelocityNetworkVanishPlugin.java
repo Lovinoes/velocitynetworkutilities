@@ -30,6 +30,8 @@ import java.util.Set;
         id = "velocitynetworkvanish",
         name = "VelocityNetworkVanish",
         version = "1.0.0",
+        description = "Network-wide vanish.",
+        url = "https://lovinoes.de",
         authors = {"Lovinoes"},
         dependencies = {@Dependency(id = "velocitynetworkutilities")}
 )
@@ -56,6 +58,8 @@ public final class VelocityNetworkVanishPlugin {
         String table = config.getString("table.name", "network_vanish_state");
         String vanishPermission = config.getString("permission.vanish", "velocitynetworkvanish.vanish");
         String seeVanishedPermission = config.getString("permission.see-vanished", VanishPermissions.SEE_VANISHED);
+        // Shared, so chat, moderation and player info follow this setting instead of the default.
+        VelocityNetworkAPI.get().setSeeVanishedPermission(seeVanishedPermission);
         Set<String> protectedCommands = new HashSet<>(config.getStringList("protected-commands"));
         String enabledMessage = messages.getString("messages.vanish-enabled", "");
         String disabledMessage = messages.getString("messages.vanish-disabled", "");

@@ -28,7 +28,7 @@ public final class PluginMessagingProvider implements NetworkMessagingProvider {
 
     @Override
     public void publish(String topic, byte[] payload) {
-        listeners.getOrDefault(topic, List.of()).forEach(listener -> listener.onMessage(topic, payload));
+        MessageListener.deliver(listeners.getOrDefault(topic, List.of()), topic, payload);
     }
 
     /**

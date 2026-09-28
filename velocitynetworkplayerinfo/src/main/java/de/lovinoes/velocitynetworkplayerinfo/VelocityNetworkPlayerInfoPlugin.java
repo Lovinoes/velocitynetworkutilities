@@ -13,7 +13,7 @@ import de.lovinoes.velocitynetworkplayerinfo.command.PlayerInfoCommand;
 import de.lovinoes.velocitynetworkplayerinfo.listener.JoinLeaveListener;
 import de.lovinoes.networkutilitiescommon.config.Language;
 import de.lovinoes.networkutilitiescommon.config.YamlConfig;
-import de.lovinoes.networkutilitiescommon.vanish.VanishPermissions;
+import de.lovinoes.velocitynetworkutilities.api.VelocityNetworkAPI;
 import org.slf4j.Logger;
 
 import java.nio.file.Path;
@@ -23,6 +23,8 @@ import java.util.List;
         id = "velocitynetworkplayerinfo",
         name = "VelocityNetworkPlayerInfo",
         version = "1.0.0",
+        description = "Network-wide join and leave messages and player lookup.",
+        url = "https://lovinoes.de",
         authors = {"Lovinoes"},
         dependencies = {
                 @Dependency(id = "velocitynetworkutilities"),
@@ -52,7 +54,7 @@ public final class VelocityNetworkPlayerInfoPlugin {
 
         String joinFormat = messages.getString("broadcast.join", "");
         String leaveFormat = messages.getString("broadcast.leave", "");
-        proxyServer.getEventManager().register(this, new JoinLeaveListener(proxyServer, joinFormat, leaveFormat, VanishPermissions.SEE_VANISHED));
+        proxyServer.getEventManager().register(this, new JoinLeaveListener(proxyServer, joinFormat, leaveFormat, VelocityNetworkAPI.get().seeVanishedPermission()));
 
         String usePermission = config.getString("permission.use", "velocitynetworkplayerinfo.use");
         String datePattern = config.getString("date-format", "dd.MM.yyyy HH:mm 'Uhr'");
@@ -70,7 +72,7 @@ public final class VelocityNetworkPlayerInfoPlugin {
                     + "minimum. Add a 'pinfo.lines' list to it to choose what the command prints.");
         }
 
-        PlayerInfoCommand command = new PlayerInfoCommand(proxyServer, usePermission, VanishPermissions.SEE_VANISHED,
+        PlayerInfoCommand command = new PlayerInfoCommand(proxyServer, usePermission, VelocityNetworkAPI.get().seeVanishedPermission(),
                 datePattern, lines, onlineFormat, offlineFormat, notFoundLine,
                 messages.getString("pinfo.usage", ""), messages.getString("pinfo.lookup-failed", ""), copyUuidTooltip);
 

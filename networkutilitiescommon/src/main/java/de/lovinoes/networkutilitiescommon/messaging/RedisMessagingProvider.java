@@ -39,9 +39,10 @@ public final class RedisMessagingProvider implements NetworkMessagingProvider {
 
         JedisPoolConfig poolConfig = new JedisPoolConfig();
         poolConfig.setMaxTotal(8);
-        this.jedisPool = password == null || password.isBlank()
-                ? new JedisPool(poolConfig, host, port, 5000)
-                : new JedisPool(poolConfig, host, port, 5000, password, database);
+        // One constructor for both cases: the one without a password also has no database
+        // number, so with no password the configured database was silently ignored.
+        this.jedisPool = new JedisPool(poolConfig, host, port, 5000,
+                password == null || password.isBlank() ? null : password, database);
 
         this.subscriberExecutor = Executors.newSingleThreadExecutor(runnable -> {
             Thread thread = new Thread(runnable, "NetworkUtilities-Redis-Subscriber");
@@ -57,7 +58,7 @@ public final class RedisMessagingProvider implements NetworkMessagingProvider {
             public void onMessage(String channel, String message) {
                 String topic = channel.substring(channelPrefix.length() + 1);
                 byte[] payload = message.getBytes(StandardCharsets.UTF_8);
-                listeners.getOrDefault(topic, List.of()).forEach(listener -> listener.onMessage(topic, payload));
+                MessageListener.deliver(listeners.getOrDefault(topic, List.of()), topic, payload);
             }
         };
         subscriberExecutor.submit(this::subscribeLoop);
@@ -106,10 +107,16 @@ public final class RedisMessagingProvider implements NetworkMessagingProvider {
         listeners.clear();
     }
 
+    /**
+     * Best effort, like the subscription: with Redis down this logs and returns, rather than
+     * throwing into whatever command wanted to tell the other proxies.
+     */
     @Override
     public void publish(String topic, byte[] payload) {
         try (var jedis = jedisPool.getResource()) {
             jedis.publish(channelPrefix + "." + topic, new String(payload, StandardCharsets.UTF_8));
+        } catch (RuntimeException e) {
+            LOGGER.log(Level.ERROR, "Could not publish '" + topic + "' to Redis; other proxies will not hear of it.", e);
         }
     }
 

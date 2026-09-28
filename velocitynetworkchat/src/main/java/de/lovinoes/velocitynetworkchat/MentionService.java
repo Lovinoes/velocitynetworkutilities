@@ -3,7 +3,6 @@ package de.lovinoes.velocitynetworkchat;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import de.lovinoes.networkutilitiescommon.chat.ChatColorParser;
-import de.lovinoes.networkutilitiescommon.vanish.VanishPermissions;
 import de.lovinoes.velocitynetworkutilities.api.VelocityNetworkAPI;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
@@ -105,7 +104,7 @@ public final class MentionService {
 
     private boolean canSee(Player sender, Player target) {
         return !VelocityNetworkAPI.get().isVanished(target.getUniqueId())
-                || sender.hasPermission(VanishPermissions.SEE_VANISHED)
+                || sender.hasPermission(VelocityNetworkAPI.get().seeVanishedPermission())
                 || sender.getUniqueId().equals(target.getUniqueId());
     }
 }
